@@ -1,0 +1,161 @@
+/* Font from Google to clean up the text */
+@import url("https://fonts.googleapis.com/css?family=Catamaran:300&display=swap");
+/* Main div element */
+.dev-widget {
+  position: absolute;
+  margin: 1em;
+  padding: 0.25em;
+}
+.dev-widget input {
+  border: none;
+  font-size: 1.25em;
+  margin: 0.1em 0;
+}
+.dev-widget button {
+  background-color: transparent;
+  border: none;
+  font-size: 1.25em;
+  padding: 0;
+  text-align: center;
+}
+.dev-widget button, .dev-widget option, .dev-widget input, .dev-widget p {
+  font-family: "Catamaran", "Arial";
+}
+.dev-widget .dev-widget-controls button {
+  color: white;
+}
+.dev-widget .dev-widget-transparent {
+  background-color: transparent;
+}
+.dev-widget .dev-widget-custom-command, .dev-widget .dev-widget-position-con {
+  display: flex;
+}
+.dev-widget .dev-widget-custom-command button, .dev-widget .dev-widget-position-con button {
+  margin: 0 auto;
+  padding: 0 0.25em;
+}
+
+.dev-widget-visible .dev-widget-play {
+  background-color: #29AF1D;
+}
+.dev-widget-visible .dev-widget-next {
+  background-color: #F7B92B;
+}
+.dev-widget-visible .dev-widget-stop {
+  background-color: #EB261F;
+}
+.dev-widget-visible .dev-widget-data button {
+  background-color: #1177B7;
+}
+
+.dev-widget-invisible .dev-widget-controls button {
+  background: transparent;
+}
+
+.dev-widget-display-open {
+  display: flex;
+  background-color: #202124;
+}
+.dev-widget-display-open button {
+  color: white;
+}
+.dev-widget-display-open .dev-widget-hide:after {
+  content: "Hide";
+}
+.dev-widget-display-open .dev-widget-shrink:after {
+  content: "Shrink";
+}
+.dev-widget-display-open .dev-widget-invis:after {
+  content: "Invis";
+}
+.dev-widget-display-open .dev-widget-controls, .dev-widget-display-open .dev-widget-visibility {
+  display: flex;
+  justify-content: space-around;
+}
+.dev-widget-display-open .dev-widget-controls button {
+  border-radius: 25px;
+  margin: 0.1em;
+  padding: 0 0.5em;
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-standard button {
+  font-size: 2em;
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-standard button:nth-of-type(1):after {
+  content: "Play";
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-standard button:nth-of-type(2):after {
+  content: "Next";
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-standard button:nth-of-type(3):after {
+  content: "Stop";
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-data button {
+  font-size: 1.5em;
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-data button:nth-of-type(1):after {
+  content: "Update";
+}
+.dev-widget-display-open .dev-widget-controls.dev-widget-data button:nth-of-type(2):after {
+  content: "Update Data";
+}
+.dev-widget-display-open .dev-widget-options {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Defines the element when hidden */
+.dev-widget-display-hide .dev-widget-hide:after {
+  content: "H";
+}
+.dev-widget-display-hide .dev-widget-shrink:after {
+  content: unset;
+}
+.dev-widget-display-hide .dev-widget-controls, .dev-widget-display-hide .dev-widget-options {
+  display: none;
+}
+
+/* Defines the element when shrunken */
+.dev-widget-display-shrink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dev-widget-display-shrink .dev-widget-hide:after {
+  content: "H";
+}
+.dev-widget-display-shrink .dev-widget-shrink:after {
+  content: "S";
+}
+.dev-widget-display-shrink .dev-widget-invis:after {
+  content: "I";
+}
+.dev-widget-display-shrink .dev-widget-options {
+  display: none;
+}
+.dev-widget-display-shrink .dev-widget-controls, .dev-widget-display-shrink .dev-widget-visibility {
+  display: flex;
+  flex-direction: column;
+}
+.dev-widget-display-shrink .dev-widget-controls button {
+  font-size: 1em;
+  border-radius: 25px;
+  margin: 0.1em;
+  padding: 0 0.5em;
+}
+.dev-widget-display-shrink .dev-widget-controls.dev-widget-standard button:nth-of-type(1):after {
+  content: "P";
+}
+.dev-widget-display-shrink .dev-widget-controls.dev-widget-standard button:nth-of-type(2):after {
+  content: "N";
+}
+.dev-widget-display-shrink .dev-widget-controls.dev-widget-standard button:nth-of-type(3):after {
+  content: "S";
+}
+.dev-widget-display-shrink .dev-widget-controls.dev-widget-data button:nth-of-type(1):after {
+  content: "U";
+}
+.dev-widget-display-shrink .dev-widget-controls.dev-widget-data button:nth-of-type(2):after {
+  content: "UD";
+}
+
+/*# sourceMappingURL=dev.css.map */

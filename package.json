@@ -1,0 +1,25 @@
+{
+  "name": "casparcg-html-dev-widget",
+  "version": "0.0.1",
+  "description": "A widget that makes developing CasparCg HTML templates easier",
+  "main": "dev.js",
+  "scripts": {
+    "httpserver": "http-server ./ -c-1 -d -p3000",
+    "SASS": "sass --watch .:."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrisryanouellette/casparcg-html-dev-widget.git"
+  },
+  "keywords": [
+    "CasparCG",
+    "HTML",
+    "Template"
+  ],
+  "author": "Christopher Ouellette",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chrisryanouellette/casparcg-html-dev-widget/issues"
+  },
+  "homepage": "https://github.com/chrisryanouellette/casparcg-html-dev-widget#readme"
+}

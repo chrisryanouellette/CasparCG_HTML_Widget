@@ -1,0 +1,22 @@
+<!-- CasparCG HTML Tempalte Developer Widget -->
+<div class="dev-controller open">
+    <!-- Visibility Controls -->
+    <button class="hide" name="hide" onclick="hideControls()"></button>
+    <button class="shrink" name="shrink" onclick="shrinkControls()"></button>
+    <button class="invis" name="invis" onclick="removeBackground(event)"></button>
+    <!-- Template Options -->
+    <div class="options span-columns">
+        <input type="text" class="position" onblur="moveWidget(event)" placeholder="Top, Bottom, Right, Left"/>
+        <input id="dev-bkg-color" type="text" placeholder="Set Background Color" onblur="setBackgroundColor(event)"/>
+        <div class="custom-command">
+            <input id="dev-custom-commands" type="text" onblur="setCustomCommand(event)" placeholder="Custom Command"/>
+            <button type="button" onclick="runCustomCommand()">Run</button>
+        </div>
+    </div>
+    <!-- Playout Controls -->
+    <div class="controls span-columns">
+            <button class="play control" onclick="play()" ></button>
+            <button class="next control" onclick="next()" ></button>
+            <button class="stop control" onclick="stop()" ></button>
+        </div>
+</div>
