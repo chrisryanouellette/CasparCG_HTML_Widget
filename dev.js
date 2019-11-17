@@ -11,62 +11,66 @@
 const DEVWIDGET = (function() {
     let localENV = 'PROD',
         initialized = false,
-        devData = {};
+        displayUpdates = false,
+        devData = {
+            positions: {
+                top: 0,
+                bottom: 0
+            }
+        };
 
     let dragging = false;
 
-    function initializeDevEnv() {
-        const html = document.querySelector('html');
-
-        // Test the envioment variable to detemine if the widgit should continue loading.
-        try {
-            if(window.location.search) {
-                // The url param to use to consider dev ENV
-                const regex = new RegExp('[\\?&]' + 'debug' + '=([^&#]*)');
-                const results = regex.exec(location.search);
-                const value = results === null ? false : decodeURIComponent(results[1].replace(/\+/g, ' '));
-                // Warn if debug was in the url and it was not set to DEV
-                if(value && value !== 'true')
-                    throw 'Template url is set to Production';
-            } else if(ENV !== 'DEV') {
-                throw new Error('Template enviorment is not set to DEV');
+    // Check for and load HTML and CSS
+    function initializeRawHTML() {
+        return new Promise((resolve, reject) => {
+            const checkDOM = () => {
+                const val = window.getComputedStyle(document.querySelector('.dev-widget')).getPropertyValue('height');
+                if(val.includes('auto') || val.replace('px', '') < 250) {
+                    window.requestAnimationFrame(checkDOM); 
+                } else {
+                    return resolve();
+                }
             }
-        } catch (error) {
-                return typeof error === 'object' 
-                    ? console.error(error) : console.warn(error);  
-        }
-        
-        // attempt to load the widget
-        try {
-            const parser = new DOMParser();
-            let head = html.querySelector('head'),
-                body = html.querySelector('body');
 
-            if(!head) head = html;
-            if(!body) body = html;
+            // attempt to load the widget
+            try {
+                const parser = new DOMParser();
+                const html = document.querySelector('html');
+                let head = html.querySelector('head'),
+                    body = html.querySelector('body');
 
-            localENV = 'DEV';
+                if(!head) head = html;
+                if(!body) body = html;
 
-            // Check for a pre loaded Dev Widget
-            if(!html.querySelector('.dev-widget')) {
-                 // Parse the Raw HTML as HTML Document
-                const widgetHTML = parser.parseFromString(getRAWHTML(), "text/html");
-                body.append(widgetHTML.querySelector('.dev-widget'));
-            } else {
-                console.warn('An dev widget was pre-loaded in the DOM');
+                localENV = 'DEV';
+
+                // Check for a pre loaded Dev Widget
+                if(!html.querySelector('.dev-widget')) {
+                    // Parse the Raw HTML as HTML Document
+                    const widgetHTML = parser.parseFromString(getRAWHTML(), "text/html");
+                    body.append(widgetHTML.querySelector('.dev-widget'));
+                } else {
+                    console.warn('An dev widget was pre-loaded in the DOM');
+                }
+                if(!head.querySelector('link[href*="dev.css"]')) {
+                    const styleHTML = parser.parseFromString(getRAWCSS(), "text/html"),
+                        style = styleHTML.querySelector('style');
+                    head.append(style);
+                } else {
+                    console.warn('A dev.css file was pre-loaded in the DOM');
+                }
+
+                checkDOM();
+            } catch (error) {
+                console.warn(error);
+                return reject();
             }
-            if(!head.querySelector('link[href*="dev.css"]')) {
-                const styleHTML = parser.parseFromString(getRAWCSS(), "text/html"),
-                    style = styleHTML.querySelector('style');
-                head.append(style);
-            } else {
-                console.warn('A dev.css file was pre-loaded in the DOM');
-            }
-        } catch (error) {
-            return console.warn(error);
-        }
+        });
+    }
 
-         // Try and add all the event inital listeners for widget
+    // Try and add all the event inital listeners for widget
+    function initializeAttributes() {
          try {
             addAttrValues([
                 {
@@ -77,13 +81,13 @@ const DEVWIDGET = (function() {
                     attr: 'click',
                     value: updateDisplay
                 }, {
-                    elem: ['.dev-widget-control', '.dev-widget-update'],
+                    elem: ['.dev-widget-control', '.dev-widget-update', '.dev-widget-custom-command-button'],
                     all: [true, false],
                     event: true,
                     defualt: false,
                     attr: 'click',
                     value: runPlayoutCommand
-                }, {
+                },{
                     elem: '.dev-widget-position',
                     event: true,
                     defualt: false,
@@ -102,7 +106,7 @@ const DEVWIDGET = (function() {
                     attr: 'blur',
                     value: updateCustomCommand
                 }, {
-                    elem: ['.dev-widget-visibility button', '.dev-widget-position-con button'],
+                    elem: ['.dev-widget-visibility button','.dev-widget-position-con button'],
                     event: true,
                     all: [true, false],
                     defualt: false,
@@ -115,17 +119,56 @@ const DEVWIDGET = (function() {
                     defualt: false,
                     attr: 'mouseup',
                     value: toggleDragWidget
-                }, {
-                    elem: window,
-                    event: true,
-                    defualt: false,
-                    attr: 'unload',
-                    value: () => saveWidgetData(devData)
                 }
             ]);
         } catch (error) {
             return console.error(`Error attaching event listeners to widget. ${error.message}`);
         }
+    }
+
+    //Checks to make sure that all the required playout functions are defined
+    function initializePlayoutFunction() {
+        const commands = ['update', 'play', 'next', 'stop'];
+        try {
+            const missing = commands.filter(item => {
+                if(typeof window[item] !== 'function' 
+                || (/\{\s*\[native code\]\s*\}/).test('' + window[item])) return true;
+                return false;
+            });
+            if(missing.length) throw new Error(missing.join(', '));
+        } catch (error) {
+            console.error(`Template is missing required playout commands: ${error.message}`)
+        }
+    }
+
+
+
+    async function initializeDevEnv() {
+        // Test the envioment variable to detemine if the widgit should continue loading.
+        try {
+            if(window.location.search) {
+                // The url param to use to consider dev ENV
+                const regex = new RegExp('[\\?&]' + 'debug' + '=([^&#]*)');
+                const results = regex.exec(location.search);
+                const value = results === null ? false : decodeURIComponent(results[1].replace(/\+/g, ' '));
+                // Warn if debug was in the url and it was not set to DEV
+                if(value && value !== 'true')
+                    throw 'Template url is set to Production';
+            } else if(ENV !== 'DEV') {
+                throw new Error('Template enviorment is not set to DEV');
+            }
+        } catch (error) {
+                return typeof error === 'object' 
+                    ? console.error(error) : console.warn(error);  
+        }
+        
+        // Load HTML and CSS and wait for the styles to apply.
+        await initializeRawHTML();
+        // Add onClick and other events to the widget's elements
+        initializeAttributes();
+        // Check the global scope for the required playout commands. update, play, next, stop
+        initializePlayoutFunction();
+        
 
         // Attempt to load data from the local storage
         try {
@@ -145,71 +188,82 @@ The position input can work with or without commas, a space is required at minim
         
         try {
             // Call all the function there is data for
-            Object.keys(devData).forEach((key, index) => {
-                if(devData[key]) {
-                    // Load the features required percieve persistance
-                    switch(key) {
-                        case 'position': 
-                            updateWidgetPosition(devData[key]);
-                            break;
-                        case 'backgroundColor': 
-                            updateBackgroundColor(devData[key]);
-                            break;
-                        case 'display': 
-                            updateDisplay(devData[key]);
-                            break;
-                        case 'customControl': 
-                            updateCustomCommand(devData[key]);
-                            break;
-                    }
-                } else {
-                    console.warn(`Dev Data has an invalid or null value for key: ${key}, ${devData[key]}`);
-                }
-            });
+            updateBackgroundColor(devData.backgroundColor);
+            updateDisplay(devData.display);
+            updateWidgetPosition(devData.position);
+            updateCustomCommand(devData.customCommand);
         } catch (error) {
             return console.error('An error occured when setting the rempaltes data. ' + error);
         }
         initialized = true;
     }
 
+    // Initialize the Widget
     initializeDevEnv();
+
+
+
 
     // Compares the update sent and current data and saves it to local storage
     function saveWidgetData(update) {
         if(!initialized) return;
-        devData = compareObjects(update, devData);
-        localStorage.setItem('devWidget', JSON.stringify(devData));
+        try {
+            devData = compareObjects(update, JSON.parse(localStorage.getItem('devWidget')));
+            localStorage.setItem('devWidget', JSON.stringify(devData));
+        } catch (error) {
+            return console.error('Error attempting to save dev data');
+        }
     }
 
-    function updateDisplay(e) {
-        if(e.target) e = e.target.name;
-        const devWidget = document.querySelector('.dev-widget');
 
-        if(e === 'hide') {
-            if(devWidget.classList.contains('dev-widget-display-hide')) {
-                if(!devWidget.classList.contains('dev-widget-invisible')) 
-                    devWidget.classList.add('dev-widget-visible')
-                devWidget.classList.remove('dev-widget-display-hide', '.dev-widget-display-shrink');
-                devWidget.classList.add('dev-widget-display-open');
+
+
+    // Updates the current look of the widget
+    // @param {string || object} e - An event object or string that has the name of the look to show
+    function updateDisplay(e) {
+        if(!e) return console.error('No display passed to update widget display');
+        if(e.target) e = e.target.name;
+        const devWidget = document.querySelector('.dev-widget'),
+            classList = devWidget.classList;
+
+        if(e.includes('hide')) {
+            if(!classList.contains('dev-widget-display-hide')) {
+                if(classList.contains('dev-widget-display-invisible')) {
+                    classList.remove('dev-widget-display-visible');
+                }
+                classList.add('dev-widget-display-hide');
+                classList.remove('dev-widget-display-open', 'dev-widget-display-shrink');
             } else {
-                devWidget.classList.add('dev-widget-display-hide');
-                devWidget.classList.remove('dev-widget-display-open', 'dev-widget-display-shrink', 'dev-widget-visible');
+                e = 'open';
             }
-        } else if(e === 'shrink') {
-            if(devWidget.classList.contains('dev-widget-display-shrink')) {
-                devWidget.classList.remove('dev-widget-display-shrink');
-                devWidget.classList.add('dev-widget-display-open');
+        }
+        if(e.includes('open')) {
+            // Show the widget
+            if(classList.contains('dev-widget-display-hide')) {
+                if(!classList.contains('dev-widget-display-invisible')) {
+                    classList.add('dev-widget-display-visible');
+                }
+                classList.remove('dev-widget-display-hide', '.dev-widget-display-shrink');
+                classList.add('dev-widget-display-open');
+            }
+        } 
+        if(e.includes('shrink')) {
+            if(classList.contains('dev-widget-display-shrink')) {
+                classList.remove('dev-widget-display-shrink');
+                classList.add('dev-widget-display-open');
             } else {
-                devWidget.classList.add('dev-widget-display-shrink');
-                devWidget.classList.remove('dev-widget-display-open', 'dev-widget-display-hide');
+                classList.add('dev-widget-display-shrink');
+                classList.remove('dev-widget-display-open', 'dev-widget-display-hide');
             }
-        } else if(e === 'invis') {
+        }
+        if(e.includes('visible')) {
             const val = devData.backgroundColor ? devData.backgroundColor : '#fff';
             const invert = adjustColor(val, {invert: true});
-            if(devWidget.classList.contains('dev-widget-invisible')) {
+            // Show the widget
+            if(classList.contains('dev-widget-display-invisible') || !e.includes('visible')) {
                 devWidget.style.backgroundColor = invert;
-                devWidget.classList.remove('dev-widget-invisible');
-                devWidget.classList.add('dev-widget-visible');
+                classList.remove('dev-widget-display-invisible');
+                classList.add('dev-widget-display-visible');
                 addAttrValues([
                     {elem: '.dev-widget button', all: true, 
                     style: true, defualt: false, attr: 'color', value: val},
@@ -218,8 +272,8 @@ The position input can work with or without commas, a space is required at minim
                 ]);
             } else {
                 devWidget.style.backgroundColor = 'transparent';
-                devWidget.classList.add('dev-widget-invisible');
-                devWidget.classList.remove('dev-widget-visible');
+                classList.add('dev-widget-display-invisible');
+                classList.remove('dev-widget-display-visible');
                 addAttrValues([
                     {elem: '.dev-widget-widget button', all: true, 
                     style: true, defualt: false, attr: 'color', value: invert},
@@ -227,54 +281,59 @@ The position input can work with or without commas, a space is required at minim
                     style: true, defualt: false, attr: 'borderBottom', value: `2px solid ${invert}`}
                 ]);
             }
+        } else {
+            // The computed styles of the widget
+            devData.widget = getElemComputedStyles({
+                elem: '.dev-widget', 
+                attrs: ['width', 'height', 'margin'], 
+                ops: 'all'
+            });
+            // Get the widgets total sizes
+            devData.widget.totalHeight = devData.widget.height + (devData.widget.margin * 4);
+            devData.widget.totalWidth = devData.widget.width + (devData.widget.margin * 4);
         }
-
-        // The computed styles of the wdiget
-        devData.widgetSize = getElemComputedStyles({
-            elem: devWidget, 
-            attrs: ['width', 'height', 'margin-top', 'margin-left'], 
-            ops: 'all'
-        });
+        const display = classList.toString();
+        return saveWidgetData({display});
     }
 
+
+
+
+    // Saves the custom command value to the local storage
+    function updateCustomCommand(e) {
+        if(!e) return;
+        if(e.target) {
+            e = e.target.value;
+        } else {
+            document.querySelector('.dev-widget-custom-command').value = e;
+        }
+        return saveWidgetData({customCommand: e});
+    }
+
+
+
+
+    // If the command is defined, it runs a playout command 
     function runPlayoutCommand(e) {
-        console.log(e)
+        if(e.target.name === 'customCommand') {
+            if(!devData.customCommand) return;
+            if(typeof window[devData.customCommand] === 'function') return window[devData.customCommand]();
+            return console.error(`Unable to execute ${devData.customCommand}`);
+        }
     }
+
+
+
 
     // Sets the widgets position on the screen. 
     //Can exept Top, Bottom, Right, Left, and or a set of pixel values
     // @param {object} top, right - The positions of the widget
     function updateWidgetPosition(positions) {
-        if(!positions) throw new Error('No positions passed to update widget position');
-        if(positions.target) positions = positions.target.value;
+        if(!positions) return console.log('No positions passed to update widget position')
+;        if(positions.target) positions = positions.target.value;
         try {
             const devWidget = document.querySelector('.dev-widget');
             const input = document.querySelector('.dev-widget-position');
-            const convertEmToPx = em => {
-                if(typeof em === 'string') em = parseFloat(em);
-                if(isNaN(em)) throw new Error('Can not parse em value');
-                return em * parseInt(getComputedStyle(devWidget).fontSize)
-            },
-            convertRemToPx = rem => {
-                if(typeof rem === 'string') rem = parseFloat(rem);
-                if(isNaN(rem)) throw new Error('Can not parse rem value');
-                return rem *  parseInt(getComputedStyle(document.querySelector('html')).fontSize)
-            }
-            // The computed styles of the wdiget
-            if(!devData.widgetSize) devData.widgetSize = getElemComputedStyles({
-                elem: devWidget, 
-                attrs: ['width', 'height', 'margin-top', 'margin-left'], 
-                ops: 'all'
-            });
-
-            let convertedPostions = {
-                top: 0,
-                left: 0
-            };
-
-            // Get the widgets total sizes
-            devData.widgetSize.totalHeight = devData.widgetSize.height + devData.widgetSize["margin-top"] * 4;
-            devData.widgetSize.totalWidth = devData.widgetSize.width + devData.widgetSize["margin-left"] * 4;
 
             if(typeof positions === 'string') {
                 // Chack for commas or spaces
@@ -292,70 +351,29 @@ The position input can work with or without commas, a space is required at minim
                 positions = arr;
             }
             if(!positions) throw new Error('Error with position input. ' + positions);
-            // For the top and left positions
-            positions.forEach((item, i) => {
-                // Check for REM, EM, or PX
-                if(isNaN(item)) {
-                item = item.toLowerCase();
-                    if(item.indexOf('rem') > 0) {
-                        convertedPostions[Object.keys(convertedPostions)[i]] = 
-                            convertRemToPx(item.substring(0, item.indexOf('rem')));
-                    } else if(item.indexOf('em') > 0) {
-                        convertedPostions[Object.keys(convertedPostions)[i]] = 
-                            convertEmToPx(item.substring(0, item.indexOf('em')));
-                    } else if(item.indexOf('px') > 0) {
-                        convertedPostions[Object.keys(convertedPostions)[i]] = item.substring(0, item.indexOf('px'));
-                    } else {
-                        //Keyword Check - Options: Top, Center, Bottom, Left, Right
-                        switch(item) {
-                            case 'top':
-                                convertedPostions.top = 50;
-                                break;
-                            case 'left':
-                                    convertedPostions.left = 50;
-                                    break;
-                            case 'center':
-                                convertedPostions[Object.keys(convertedPostions)[i]] = 
-                                    i === 0 
-                                        ? window.innerHeight / 2 - devData.widgetSize.totalHeight / 2 
-                                        : window.innerWidth / 2 - devData.widgetSize.totalWidth / 2;
-                                break;
-                            case 'bottom':
-                                convertedPostions.top = window.innerHeight - devWidget.clientHeight;
-                                break;
-                            case 'right':
-                                    convertedPostions.left = window.innerWidth - devWidget.clientWidth;
-                                    break;
-                            default: 
-                                throw `"${item}" is not a valid position or keyword`;
-                        }
-                    }
-                } else {
-                    convertedPostions[Object.keys(convertedPostions)[i]] = item;
-                }
-               if(convertedPostions[Object.keys(convertedPostions)[i]] < 0) 
-                    convertedPostions[Object.keys(convertedPostions)[i]] = 0;
-            });
-            if(convertedPostions.top > window.innerHeight - devData.widgetSize.totalHeight) 
-                convertedPostions.top = window.innerHeight - devData.widgetSize.totalHeight;
-            if(convertedPostions.left > window.innerWidth - devData.widgetSize.totalWidth)
-                convertedPostions.left = window.innerWidth - devData.widgetSize.totalWidth;
-
-            convertedPostions.top = Math.ceil(convertedPostions.top);
-            convertedPostions.left = Math.ceil(convertedPostions.left);
+            if(!devData.widget) {
+                 // The computed styles of the widget
+                devData.widget = getElemComputedStyles({
+                    elem: '.dev-widget', 
+                    attrs: ['width', 'height', 'margin'], 
+                    ops: 'all'
+                });
+                // Get the widgets total sizes
+                devData.widget.totalHeight = devData.widget.height + (devData.widget.margin * 4);
+                devData.widget.totalWidth = devData.widget.width + (devData.widget.margin * 4);
+            }
+            
+            // Get a PX value for each position
+            const convertedPostions = convertPositions(positions);
 
             devWidget.style.top = convertedPostions.top + 'px';
             devWidget.style.left = convertedPostions.left + 'px';
 
             input.value = `${positions[0]}, ${positions[1]}`;
 
-            devData.position = {
-                top: convertedPostions.top,
-                left: convertedPostions.left
-            };
+            devData.widget.positions = convertedPostions; 
 
             if(!dragging) {
-                console.log(`Widget is now positioned at ${devWidget.style.top} X / ${devWidget.style.left} Y.`);
                 return saveWidgetData({position: positions});
             }
 
@@ -365,29 +383,90 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
     function dragWidget(e) {
         if(dragging) {
-            
+            return updateWidgetPosition([e.clientY - 50, e.clientX - 50])
         }
     }
 
     function toggleDragWidget(e) {
+        e.preventDefault();
         if(e.type === 'mousedown') {
+            if(document.querySelector('.dev-widget').classList.contains('dev-widget-display-open')
+            && e.target.parentElement.classList.contains('dev-widget-visibility')) return;
             dragging = true;
             document.addEventListener('mousemove', dragWidget);
-        } else {
+        } else if(dragging) {
             dragging = false;
             document.removeEventListener('mousemove', dragWidget);
+            return saveWidgetData({position: [e.clientY - 50, e.clientX - 100]});
         }
     }
 
-    function updateBackgroundColor() {
 
+
+
+
+
+
+
+
+    function updateBackgroundColor(e) {
+        if(!e) return console.error('No value supplied for updateBackgroundColor');
+        try {
+            const rawValue = e.target ? e.target.value : e;
+            if(!rawValue) throw new Error('Adjusting the Color requires a valid HEX, RGB, or RGBA value. Example: HEX: #FFF or #FFFFFF RGB: 255, 255, 255 RGBA 255, 255, 255, .5');
+            if(rawValue.includes('http')) {
+                document.querySelector('body').style.backgroundImage = `url(${val})`;
+                return saveDevData({backgroundColor: `url(${val})`});
+            }
+            // Get the inverted color of the set background color
+            const val = adjustColor(rawValue, {});
+            const invert = adjustColor(val, {invert: true});
+            
+            document.querySelector('body').style.backgroundColor = val;
+            document.querySelector('body').style.backgroundImage = null;
+            document.querySelector('.dev-widget').style.backgroundColor = invert;
+            document.querySelector('.dev-widget-background-color').value = rawValue;
+
+            addAttrValues([
+                {
+                    elem: '.dev-widget-widget div:not(.dev-widget-controls) button',
+                    all: true,
+                    style: true,
+                    attr: 'color',
+                    value: val
+                }, {
+                    elem: '.dev-widget-widget input',
+                    all: true,
+                    style: true,
+                    attr: 'backgroundColor',
+                    value: val
+                }, {
+                    elem: '.dev-widget-widget input',
+                    all: true,
+                    style: true,
+                    attr: 'color',
+                    value: invert
+                }
+            ]);
+            return saveWidgetData({backgroundColor: rawValue});
+        } catch(error) {
+            return console.error(error);
+        }
     }
 
-    function updateCustomCommand() {
-
-    }
 
     /* Playout Controls
 
@@ -468,12 +547,82 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
+    // Convert positions array into integers
+    function convertPositions(positions) {
+        if(!positions) throw new Error('Error with position input. ' + positions);
+        // Convert EM to PX
+        const convertEmToPx = em => {
+            if(typeof em === 'string') em = parseFloat(em);
+            if(isNaN(em)) throw new Error('Can not parse em value');
+            return em * parseInt(getComputedStyle(devWidget).fontSize)
+        },
+        // Convert REM to PX
+        convertRemToPx = rem => {
+            if(typeof rem === 'string') rem = parseFloat(rem);
+            if(isNaN(rem)) throw new Error('Can not parse rem value');
+            return rem *  parseInt(getComputedStyle(document.querySelector('html')).fontSize)
+        }
+
+        return positions.reduce((acc, item, i) => {
+            // Check for REM, EM, or PX
+            if(isNaN(item)) {
+                item = item.toLowerCase();
+                // Is a REM value
+                if(item.indexOf('rem') > 0) {
+                    convertedPostions[Object.keys(convertedPostions)[i]] = 
+                        convertRemToPx(item.substring(0, item.indexOf('rem')));
+                // Is a EM value
+                } else if(item.indexOf('em') > 0) {
+                    convertedPostions[Object.keys(convertedPostions)[i]] = 
+                        convertEmToPx(item.substring(0, item.indexOf('em')));
+                // Is a Pixel value
+                } else if(item.indexOf('px') > 0) {
+                    convertedPostions[Object.keys(convertedPostions)[i]] = item.substring(0, item.indexOf('px'));
+                } else {
+                //Keyword Check - Options: Top, Center, Bottom, Left, Right
+                    switch(item) {
+                        case 'top':
+                        case 'left':
+                            break;
+                        case 'center':
+                            acc[Object.keys(acc)[i]] = i === 0 
+                                ? window.innerHeight / 2 - devData.widget.totalHeight / 2 
+                                : window.innerWidth / 2 - devData.widget.totalWidth / 2;
+                            break;
+                        case 'bottom':
+                            acc.top = window.innerHeight - devData.widget.totalHeight;
+                            break
+                        case 'right':
+                            acc.left = window.innerWidth - devData.widget.totalWidth;
+                            break;
+                        default: 
+                            throw `"${item}" is not a valid position or keyword`;
+                    }
+                }
+            } else {
+                acc[Object.keys(acc)[i]] = item;
+            }
+            acc[Object.keys(acc)[i]] = Math.ceil(acc[Object.keys(acc)[i]]);
+            if(acc[Object.keys(acc)[i]] < 0) acc[Object.keys(acc)[i]] = 0;
+            if(Object.keys(acc)[i] === 'top') {
+                if(acc.top > window.innerHeight - (devData.widget.height + devData.widget.margin * 4)) 
+                    acc.top = window.innerHeight -(devData.widget.height + devData.widget.margin * 4);
+            } else {
+                if(acc.left > window.innerWidth - (devData.widget.width + devData.widget.margin * 4))
+                    acc.left = window.innerWidth - (devData.widget.width + devData.widget.margin * 4);
+
+            }
+            return acc;
+        }, {top: 50, left: 50});
+    }
+
     // Compares two objects and returns a new update object
     // @param {object} obj1 - The new object
     // @param {obejct} obj2 - The old object to be updated
     // @returns {object} The updated object
     const compareObjects = (obj1, obj2) => {
-        if(!obj1 || !obj2 | !Object.keys(obj1).length) return false;
+        if(!obj1 && !Object.keys(obj1).length) return false;
+        if(!obj2) obj2 = {};
         // Loop through each item in the new object
         return Object.keys(obj1).reduce((acc, key) => {
             // If the item is a string
@@ -634,34 +783,48 @@ The position input can work with or without commas, a space is required at minim
 
     function getRAWHTML() {
         return `
-<!-- CasparCG HTML Tempalte Developer Widget -->
-<div class="dev-controller open">
-    <!-- Visibility Controls -->
-    <button class="hide" onclick="hideControls()"></button>
-    <button class="shrink" onclick="shrinkControls()"></button>
-    <button class="invis" onclick="removeBackground(event)"></button>
-    <!-- Template Options -->
-    <div class="options span-columns">
-        <input type="text" class="position" onblur="moveWidget(event)" placeholder="Top, Bottom, Right, Left"/>
-        <input id="dev-bkg-color" type="text" placeholder="Set Background Color" onblur="setBackgroundColor(event)"/>
-        <div class="custom-command">
-            <input id="dev-custom-commands" type="text" onblur="setCustomCommand(event)" placeholder="Custom Command"/>
-            <button type="button" onclick="runCustomCommand()">Run</button>
+        <!-- CasparCG HTML Tempalte Developer Widget -->
+        <!-- Most text values for buttons are set with ::after-->
+        <div class="dev-widget dev-widget-display-open dev-widget-display-visible">
+            <div class="dev-widget-widget">
+                <!-- Visibility Controls -->
+                <div class="dev-widget-visibility">
+                    <button class="dev-widget-hide" name="hide"></button>
+                    <button class="dev-widget-shrink" name="shrink"></button>
+                    <button class="dev-widget-invis" name="invis"></button>
+                </div>
+                <!-- Template Options -->
+                <div class="dev-widget-options">
+                    <div class="dev-widget-position-con">
+                        <input type="text" class="dev-widget-position" placeholder="Top, Bottom, Right, Left"/>
+                        <button type="button">Drag Me</button>
+                    </div>
+                    <input class="dev-widget-background-color" type="text" placeholder="Set Background Color"/>
+                    <div class="dev-widget-custom-command-con">
+                        <input class="dev-widget-custom-command" type="text" placeholder="Custom Command"/>
+                        <button type="button">Run</button>
+                    </div>
+                </div>
+                <!-- Playout Controls -->
+                <div class="dev-widget-controls dev-widget-standard">
+                    <button class="dev-widget-play dev-widget-control"></button>
+                    <button class="dev-widget-next dev-widget-control"></button>
+                    <button class="dev-widget-stop dev-widget-control"></button>
+                </div>
+                <div class="dev-widget-controls dev-widget-data">
+                    <button class="dev-widget-update"></button>
+                    <button clas="dev-widget-update-data"></button>
+                </div>
+            </div>
         </div>
-    </div>
-    <!-- Playout Controls -->
-    <div class="controls span-columns">
-            <button class="play control" ></button>
-            <button class="next control" onclick="next()" ></button>
-            <button class="stop control" onclick="stop()" ></button>
-        </div>
-</div>
 `
     }
 
     function getRAWCSS() {
         return `
+<style>
 
+</style>
 `
     }
 
@@ -739,7 +902,7 @@ const setBackgroundColor = e => {
     const rawValue = e.target ? e.target.value : e;
     const val = adjustColorDev(rawValue, {});
     if(!val) throw new Error('Adjusting the Color requires a valid HEX, RGB, or RGBA value. Example: HEX: #FFF or #FFFFFF RGB: 255, 255, 255 RGBA 255, 255, 255, .5');
-    if(val.includes('/')) {
+    if(val.includes('http')) {
         document.querySelector('body').style.backgroundImage = `url(${val})`;
         return saveDevData({backgroundColor: `url(${val})`});
     }
@@ -767,11 +930,4 @@ const setBackgroundColor = e => {
 // Saves the text entered into the custom command input
 const setCustomCommand = e => {
     return saveDevData({customCommand: e.target.value});
-}
-
-// Attemps to run a function on the global scope, typically a custom command
-const runCustomCommand = () => {
-    if(!devData.customCommand) return;
-    if(typeof window[devData.customCommand] === 'function') return window[devData.customCommand]();
-    return console.error(`Unable to execute ${devData.customCommand}`);
 }
