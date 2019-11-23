@@ -17,3 +17,23 @@ window.onload = () => {
         return console.error('Error attempting to test env.')
     }
 };
+
+function update() {
+
+}
+
+function play() {
+    
+}
+
+function next() {
+    
+}
+
+function stop() {
+    
+}
+
+function reset() {
+    console.log('Custom Command!')
+}
