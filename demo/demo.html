@@ -12,39 +12,39 @@
     <body>
         <main class="graphic-container">
 <!-- CasparCG HTML Tempalte Developer Widget -->
-<!-- Most text values for buttons are set with ::after-->
-<div class="dev-widget dev-widget-display-open dev-widget-visible">
-    <div class="dev-widget-widget">
-        <!-- Visibility Controls -->
-        <div class="dev-widget-visibility">
-            <button class="dev-widget-hide" name="hide"></button>
-            <button class="dev-widget-shrink" name="shrink"></button>
-            <button class="dev-widget-invis" name="invis"></button>
-        </div>
-        <!-- Template Options -->
-        <div class="dev-widget-options">
-            <div class="dev-widget-position-con">
-                <input type="text" class="dev-widget-position" placeholder="Top, Bottom, Right, Left"/>
-                <button type="button">Drag Me</button>
+        <!-- Most text values for buttons are set with ::after-->
+        <div class="dev-widget dev-widget-display-open dev-widget-display-visible">
+            <div class="dev-widget-widget">
+                <!-- Visibility Controls -->
+                <div class="dev-widget-visibility">
+                    <button class="dev-widget-hide" name="hide"></button>
+                    <button class="dev-widget-shrink" name="shrink"></button>
+                    <button class="dev-widget-invis" name="visible"></button>
+                </div>
+                <!-- Template Options -->
+                <div class="dev-widget-options">
+                    <div class="dev-widget-position-con">
+                        <input type="text" class="dev-widget-position" placeholder="Top, Bottom, Right, Left"/>
+                        <button type="button">Drag Me</button>
+                    </div>
+                    <input class="dev-widget-background-color" type="text" placeholder="Set Background Color"/>
+                    <div class="dev-widget-custom-command-con">
+                        <input class="dev-widget-custom-command" type="text" placeholder="Custom Command"/>
+                        <button class="dev-widget-custom-command-button" type="button" name="customCommand">Run</button>
+                    </div>
+                </div>
+                <!-- Playout Controls -->
+                <div class="dev-widget-controls dev-widget-standard">
+                    <button class="dev-widget-play dev-widget-control"></button>
+                    <button class="dev-widget-next dev-widget-control"></button>
+                    <button class="dev-widget-stop dev-widget-control"></button>
+                </div>
+                <div class="dev-widget-controls dev-widget-data">
+                    <button class="dev-widget-update"></button>
+                    <button class="dev-widget-update-data"></button>
+                </div>
             </div>
-            <input class="dev-widget-background-color" type="text" placeholder="Set Background Color"/>
-            <div class="dev-widget-custom-command">
-                <input class="dev-custom-commands" type="text" placeholder="Custom Command"/>
-                <button type="button">Run</button>
-            </div>
         </div>
-        <!-- Playout Controls -->
-        <div class="dev-widget-controls dev-widget-standard">
-            <button class="dev-widget-play dev-widget-control"></button>
-            <button class="dev-widget-next dev-widget-control"></button>
-            <button class="dev-widget-stop dev-widget-control"></button>
-        </div>
-        <div class="dev-widget-controls dev-widget-data">
-            <button class="dev-widget-update"></button>
-            <button clas="dev-widget-update-data"></button>
-        </div>
-    </div>
-</div>
         </main>
         <script rel="application/javascript" src="http://localhost:3000/demo/animation-code.js" async defer></script>
         <script rel="application/javascript" src="http://localhost:3000/dev.js" async defer></script>

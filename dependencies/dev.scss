@@ -37,7 +37,7 @@ $update: #1177B7;
     .dev-widget-transparent {
         background-color: transparent;
     }
-    .dev-widget-custom-command, .dev-widget-position-con {
+    .dev-widget-custom-command-con, .dev-widget-position-con {
         display: flex;
 
         & button {
@@ -47,7 +47,7 @@ $update: #1177B7;
     }
 }
 
-.dev-widget-visible {
+.dev-widget-display-visible {
     .dev-widget-play {
         background-color: $play;
     }
@@ -62,11 +62,12 @@ $update: #1177B7;
     }
 }
 
-.dev-widget-invisible {
+.dev-widget-display-invisible {
     .dev-widget-controls button {
         background: transparent;
     }
 }
+
 
 .dev-widget-display-open {
     display: flex;
@@ -122,6 +123,12 @@ $update: #1177B7;
 
 /* Defines the element when hidden */
 .dev-widget-display-hide {
+    .dev-widget-widget, .dev-widget-visibility {
+        display: flex;
+    }
+    .dev-widget-visibility {
+        margin: 1em;
+    }
     .dev-widget-hide:after {
         content: 'H';
     }
@@ -179,4 +186,14 @@ $update: #1177B7;
             content: 'UD';
         }
     }
+}
+
+.dev-widget-display-full-screen {
+
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
 }

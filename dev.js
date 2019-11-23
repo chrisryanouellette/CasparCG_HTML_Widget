@@ -9,17 +9,21 @@
 
 // Global variable that acts as API
 const DEVWIDGET = (function() {
+    // Controls the local enviorment
     let localENV = 'PROD',
+    // If the app has loaded the widget and the css as well as atached the needed event listeners.
         initialized = false,
+    // Determins if we should log an update to the console
         displayUpdates = false,
+    // If we are dragging the widget
+        dragging = false,
+    // The data used by the widget
         devData = {
             positions: {
                 top: 0,
                 bottom: 0
             }
         };
-
-    let dragging = false;
 
     // Check for and load HTML and CSS
     function initializeRawHTML() {
@@ -87,7 +91,13 @@ const DEVWIDGET = (function() {
                     defualt: false,
                     attr: 'click',
                     value: runPlayoutCommand
-                },{
+                }, {
+                    elem: '.dev-widget-update-data',
+                    event: true,
+                    defualt: false,
+                    attr: 'click',
+                    value: toggleEditTempateData
+                }, {
                     elem: '.dev-widget-position',
                     event: true,
                     defualt: false,
@@ -141,8 +151,7 @@ const DEVWIDGET = (function() {
         }
     }
 
-
-
+    // Initialize all the needed components to make the widget run
     async function initializeDevEnv() {
         // Test the envioment variable to detemine if the widgit should continue loading.
         try {
@@ -198,10 +207,11 @@ The position input can work with or without commas, a space is required at minim
         initialized = true;
     }
 
-    // Initialize the Widget
+    /*  Initializes the widget.
+        Order of opperations
+        Check ENV -> Load HTML and CSS -> Try to get local storage data -> update any values returned
+    */
     initializeDevEnv();
-
-
 
 
     // Compares the update sent and current data and saves it to local storage
@@ -215,17 +225,18 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
-
-
-
     // Updates the current look of the widget
     // @param {string || object} e - An event object or string that has the name of the look to show
     function updateDisplay(e) {
         if(!e) return console.error('No display passed to update widget display');
-        if(e.target) e = e.target.name;
+        if(e.target) {
+            e.stopPropagation();
+            e = e.target.name;
+        }
         const devWidget = document.querySelector('.dev-widget'),
             classList = devWidget.classList;
 
+        // If we are trying to hide or show the widget
         if(e.includes('hide')) {
             if(!classList.contains('dev-widget-display-hide')) {
                 if(classList.contains('dev-widget-display-invisible')) {
@@ -237,16 +248,17 @@ The position input can work with or without commas, a space is required at minim
                 e = 'open';
             }
         }
+        // If we are trying to hide or show the widget
         if(e.includes('open')) {
             // Show the widget
-            if(classList.contains('dev-widget-display-hide')) {
-                if(!classList.contains('dev-widget-display-invisible')) {
-                    classList.add('dev-widget-display-visible');
-                }
-                classList.remove('dev-widget-display-hide', '.dev-widget-display-shrink');
-                classList.add('dev-widget-display-open');
+            if(!classList.contains('dev-widget-display-invisible')) {
+                classList.add('dev-widget-display-visible');
             }
+            classList.remove('dev-widget-display-hide', '.dev-widget-display-shrink');
+            classList.add('dev-widget-display-open');
+        
         } 
+        // If we are trying to shrink or unshrink the widget
         if(e.includes('shrink')) {
             if(classList.contains('dev-widget-display-shrink')) {
                 classList.remove('dev-widget-display-shrink');
@@ -256,11 +268,12 @@ The position input can work with or without commas, a space is required at minim
                 classList.remove('dev-widget-display-open', 'dev-widget-display-hide');
             }
         }
+        // If we are trying to add or remove the background to the widget
         if(e.includes('visible')) {
             const val = devData.backgroundColor ? devData.backgroundColor : '#fff';
             const invert = adjustColor(val, {invert: true});
             // Show the widget
-            if(classList.contains('dev-widget-display-invisible') || !e.includes('visible')) {
+            if(classList.contains('dev-widget-display-invisible') || (!e.includes('invisible') && !initialized)) {
                 devWidget.style.backgroundColor = invert;
                 classList.remove('dev-widget-display-invisible');
                 classList.add('dev-widget-display-visible');
@@ -281,6 +294,7 @@ The position input can work with or without commas, a space is required at minim
                     style: true, defualt: false, attr: 'borderBottom', value: `2px solid ${invert}`}
                 ]);
             }
+        // Update the widgets size to reflect the changes above
         } else {
             // The computed styles of the widget
             devData.widget = getElemComputedStyles({
@@ -293,34 +307,11 @@ The position input can work with or without commas, a space is required at minim
             devData.widget.totalWidth = devData.widget.width + (devData.widget.margin * 4);
         }
         const display = classList.toString();
+        // Save the data
         return saveWidgetData({display});
     }
 
-
-
-
-    // Saves the custom command value to the local storage
-    function updateCustomCommand(e) {
-        if(!e) return;
-        if(e.target) {
-            e = e.target.value;
-        } else {
-            document.querySelector('.dev-widget-custom-command').value = e;
-        }
-        return saveWidgetData({customCommand: e});
-    }
-
-
-
-
-    // If the command is defined, it runs a playout command 
-    function runPlayoutCommand(e) {
-        if(e.target.name === 'customCommand') {
-            if(!devData.customCommand) return;
-            if(typeof window[devData.customCommand] === 'function') return window[devData.customCommand]();
-            return console.error(`Unable to execute ${devData.customCommand}`);
-        }
-    }
+    
 
 
 
@@ -329,11 +320,10 @@ The position input can work with or without commas, a space is required at minim
     //Can exept Top, Bottom, Right, Left, and or a set of pixel values
     // @param {object} top, right - The positions of the widget
     function updateWidgetPosition(positions) {
-        if(!positions) return console.log('No positions passed to update widget position')
-;        if(positions.target) positions = positions.target.value;
+        if(!positions) return console.log('No positions passed to update widget position');
+        if(positions.target) positions = positions.target.value;
         try {
             const devWidget = document.querySelector('.dev-widget');
-            const input = document.querySelector('.dev-widget-position');
 
             if(typeof positions === 'string') {
                 // Chack for commas or spaces
@@ -369,10 +359,13 @@ The position input can work with or without commas, a space is required at minim
             devWidget.style.top = convertedPostions.top + 'px';
             devWidget.style.left = convertedPostions.left + 'px';
 
-            input.value = `${positions[0]}, ${positions[1]}`;
+            // Set the input's value
+            document.querySelector('.dev-widget-position').value = `${positions[0]}, ${positions[1]}`;
 
+            // Update the dev data
             devData.widget.positions = convertedPostions; 
 
+            // If we aren't dragging the widget, save the data
             if(!dragging) {
                 return saveWidgetData({position: positions});
             }
@@ -383,30 +376,23 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
+    // Moves the widget if we are dragging it
+    // @param {object} e - The event object that tests the the mouse position
     function dragWidget(e) {
         if(dragging) {
             return updateWidgetPosition([e.clientY - 50, e.clientX - 50])
         }
     }
 
+    // Toggles whether the widget is being dragged or not.
+    // @param {object} e - The event object to test to seeif we should start dragging the widget
     function toggleDragWidget(e) {
         e.preventDefault();
         if(e.type === 'mousedown') {
             if(document.querySelector('.dev-widget').classList.contains('dev-widget-display-open')
             && e.target.parentElement.classList.contains('dev-widget-visibility')) return;
             dragging = true;
-            document.addEventListener('mousemove', dragWidget);
+            setTimeout(() => dragging && document.addEventListener('mousemove', dragWidget), 100);
         } else if(dragging) {
             dragging = false;
             document.removeEventListener('mousemove', dragWidget);
@@ -414,14 +400,8 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
-
-
-
-
-
-
-
-
+        // Updates the widget and body's background color
+    // @param {string || object} e - An event object or string that contains the color to update the background to
     function updateBackgroundColor(e) {
         if(!e) return console.error('No value supplied for updateBackgroundColor');
         try {
@@ -467,19 +447,48 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
+    // Saves the custom command value to the local storage
+    function updateCustomCommand(e) {
+        if(!e) return;
+        if(e.target) {
+            e = e.target.value;
+        } else {
+            document.querySelector('.dev-widget-custom-command').value = e;
+        }
+        return saveWidgetData({customCommand: e});
+    }
 
-    /* Playout Controls
+    // If the command is defined, it runs a playout command 
+    function runPlayoutCommand(e) {
+        if(e.target.name === 'customCommand') {
+            if(!devData.customCommand) return;
+            if(typeof window[devData.customCommand] === 'function') return window[devData.customCommand]();
+            return console.error(`Unable to execute ${devData.customCommand}`);
+        }
+    }
 
-    */
-
-    function play() {
-        console.log('play')
+    function toggleEditTempateData() {
+        const devWidget = document.querySelector('.dev-widget');
+        if(!devWidget.classList.contains('dev-widget-display-full-screen')) {
+            devWidget.style.top = 0;
+            devWidget.style.left = 0;
+            devWidget.classList.add('dev-widget-display-full-screen');
+        } else {
+            updateWidgetPosition(devData.position);
+            devWidget.classList.remove('dev-widget-display-full-screen');
+        }
     }
 
     /* Helper Funtions
         @function addStyleValues - Adds the width, height or both to a value
         @function getElemComputedStyles 
             - Returns the computed styles of an element as a total or object of all the values
+    
+    
+    
+    
+    
+    
     */
 
     //  Checks for spaces in a value and if they are found, splits and adds each value together
@@ -777,8 +786,8 @@ The position input can work with or without commas, a space is required at minim
     }
 
 
-    /* 
-
+    /*  The widgets raw HTML
+        You can find a formatwed version in the dependencies folder.
     */
 
     function getRAWHTML() {
@@ -820,6 +829,10 @@ The position input can work with or without commas, a space is required at minim
 `
     }
 
+    /*  The widgets raw CSS
+        You can find a formatwed version in the dependencies folder.
+    */
+
     function getRAWCSS() {
         return `
 <style>
@@ -829,8 +842,8 @@ The position input can work with or without commas, a space is required at minim
     }
 
     return {
-        /*
-
+        /*  Widget API
+            Allows the dev to interact with the widget with code or the console.
         */
         // Returns the top and left positions
         widgetPosition: function() {return devData.position},
@@ -894,40 +907,3 @@ DEVWIDGET.setWidgetPosition(position)
     }
     
 }());
-
-
-// Sets the Background color of the body HTML Element
-// @param {object} e - Event oject
-const setBackgroundColor = e => {
-    const rawValue = e.target ? e.target.value : e;
-    const val = adjustColorDev(rawValue, {});
-    if(!val) throw new Error('Adjusting the Color requires a valid HEX, RGB, or RGBA value. Example: HEX: #FFF or #FFFFFF RGB: 255, 255, 255 RGBA 255, 255, 255, .5');
-    if(val.includes('http')) {
-        document.querySelector('body').style.backgroundImage = `url(${val})`;
-        return saveDevData({backgroundColor: `url(${val})`});
-    }
-    try {
-        // Get the inverted color of the set background color
-        const invert = adjustColorDev(val, {invert: true});
-        const buttons = document.querySelectorAll('.dev-controller button:not(.control)'),
-            inputs = document.querySelectorAll('.dev-controller input'),
-            input = document.querySelector('.dev-controller #dev-bkg-color');
-        
-        document.querySelector('body').style.backgroundColor = val;
-        document.querySelector('body').style.backgroundImage = null;
-        document.querySelector('.dev-controller').style.backgroundColor = invert;
-        buttons.forEach(elem => {
-            elem.style.color = val;
-        });
-        inputs.forEach((elem) => elem.style.border = `1px solid ${val}`);
-        input.value = rawValue;
-        return saveDevData({backgroundColor: rawValue});
-    } catch(e) {
-        console.error(e);
-    }
-}
-
-// Saves the text entered into the custom command input
-const setCustomCommand = e => {
-    return saveDevData({customCommand: e.target.value});
-}
