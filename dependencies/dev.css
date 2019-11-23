@@ -27,28 +27,28 @@
 .dev-widget .dev-widget-transparent {
   background-color: transparent;
 }
-.dev-widget .dev-widget-custom-command, .dev-widget .dev-widget-position-con {
+.dev-widget .dev-widget-custom-command-con, .dev-widget .dev-widget-position-con {
   display: flex;
 }
-.dev-widget .dev-widget-custom-command button, .dev-widget .dev-widget-position-con button {
+.dev-widget .dev-widget-custom-command-con button, .dev-widget .dev-widget-position-con button {
   margin: 0 auto;
   padding: 0 0.25em;
 }
 
-.dev-widget-visible .dev-widget-play {
+.dev-widget-display-visible .dev-widget-play {
   background-color: #29AF1D;
 }
-.dev-widget-visible .dev-widget-next {
+.dev-widget-display-visible .dev-widget-next {
   background-color: #F7B92B;
 }
-.dev-widget-visible .dev-widget-stop {
+.dev-widget-display-visible .dev-widget-stop {
   background-color: #EB261F;
 }
-.dev-widget-visible .dev-widget-data button {
+.dev-widget-display-visible .dev-widget-data button {
   background-color: #1177B7;
 }
 
-.dev-widget-invisible .dev-widget-controls button {
+.dev-widget-display-invisible .dev-widget-controls button {
   background: transparent;
 }
 
@@ -104,6 +104,12 @@
 }
 
 /* Defines the element when hidden */
+.dev-widget-display-hide .dev-widget-widget, .dev-widget-display-hide .dev-widget-visibility {
+  display: flex;
+}
+.dev-widget-display-hide .dev-widget-visibility {
+  margin: 1em;
+}
 .dev-widget-display-hide .dev-widget-hide:after {
   content: "H";
 }
@@ -156,6 +162,15 @@
 }
 .dev-widget-display-shrink .dev-widget-controls.dev-widget-data button:nth-of-type(2):after {
   content: "UD";
+}
+
+.dev-widget-display-full-screen {
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
 }
 
 /*# sourceMappingURL=dev.css.map */
