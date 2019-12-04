@@ -2,14 +2,31 @@
 @import url("https://fonts.googleapis.com/css?family=Catamaran:300&display=swap");
 /* Main div element */
 .dev-widget {
+  border-radius: 5px;
   position: absolute;
   margin: 1em;
   padding: 0.25em;
+  top: 0;
 }
-.dev-widget input {
+.dev-widget a, .dev-widget a:visited {
+  text-decoration: none;
+  color: white;
+}
+.dev-widget p {
+  margin: 0;
+}
+.dev-widget input, .dev-widget a {
   border: none;
   font-size: 1.25em;
   margin: 0.1em 0;
+  padding: 0 0.25em;
+}
+.dev-widget textarea {
+  display: none;
+  min-width: 50vw;
+  min-height: 60vh;
+  font-size: 1.25em;
+  margin: 0.5em 0;
 }
 .dev-widget button {
   background-color: transparent;
@@ -18,10 +35,10 @@
   padding: 0;
   text-align: center;
 }
-.dev-widget button, .dev-widget option, .dev-widget input, .dev-widget p {
+.dev-widget button, .dev-widget option, .dev-widget input, .dev-widget h2, .dev-widget p, .dev-widget select, .dev-widget option, .dev-widget a, .dev-widget label, .dev-widget textarea {
   font-family: "Catamaran", "Arial";
 }
-.dev-widget .dev-widget-controls button {
+.dev-widget .dev-widget-controls button, .dev-widget .dev-widget-update-data-con {
   color: white;
 }
 .dev-widget .dev-widget-transparent {
@@ -32,19 +49,193 @@
 }
 .dev-widget .dev-widget-custom-command-con button, .dev-widget .dev-widget-position-con button {
   margin: 0 auto;
+  padding: 0 0.5em;
+  white-space: nowrap;
+}
+.dev-widget .dev-widget-position-con button {
+  padding-left: unset;
+}
+.dev-widget .dev-widget-settings-con, .dev-widget .dev-widget-update-data-con {
+  display: none;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+}
+.dev-widget .dev-widget-update-controls, .dev-widget .dev-widget-update-prefs-controls {
+  display: flex;
+  justify-content: space-evenly;
+}
+.dev-widget .dev-widget-update-controls button, .dev-widget .dev-widget-update-prefs-controls button {
+  padding: 0 1em;
+  border-bottom: 1.5px solid transparent;
+  transition-property: border-bottom;
+  transition-duration: 0.5s;
+}
+.dev-widget .dev-widget-update-controls button:hover:first-of-type, .dev-widget .dev-widget-update-prefs-controls button:hover:first-of-type {
+  border-bottom: 1.5px solid #EB261F;
+}
+.dev-widget .dev-widget-update-controls button:hover:last-of-type, .dev-widget .dev-widget-update-prefs-controls button:hover:last-of-type {
+  border-bottom: 1.5px solid #1177B7;
+}
+.dev-widget .dev-widget-update-data-con > div {
+  background-color: #202124;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  margin: 0.25em 0;
+  padding: 1em;
+}
+.dev-widget .dev-widget-update-data-con button {
+  color: white;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header > * {
+  margin: 0;
   padding: 0 0.25em;
 }
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header select, .dev-widget .dev-widget-update-data-con .dev-widget-data-header option, .dev-widget .dev-widget-update-data-con .dev-widget-data-header button {
+  font-size: 1em;
+  color: white;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header select {
+  background-color: transparent;
+  border: none;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header option {
+  color: black;
+  border: none;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-template-data-name {
+  border: none;
+  border-bottom: 1.5px solid white;
+  background-color: transparent;
+  color: white;
+  display: block;
+  margin: 0 0 0 auto;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-hidden-elements {
+  display: none;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con form {
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-data {
+  border: 1px solid transparent;
+  display: grid;
+  grid-template-columns: min-content 1fr 1fr;
+  grid-column: 1/3 span;
+  margin: 0.5em 0.25em;
+  padding: 0 0.15em;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-data > button {
+  display: flex;
+  grid-column: 3;
+  margin: 0 0 0 auto;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con div.dev-widget-data-object, .dev-widget .dev-widget-update-data-con .dev-widget-data-con div.dev-widget-data-array {
+  border: 1px solid #1177B7;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-message {
+  grid-column: span 2;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-data-type {
+  background-color: transparent;
+  border: none;
+  color: white;
+  grid-column: 1;
+  height: 3em;
+  width: min-content;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-data-type option {
+  background-color: #202124;
+  white-space: nowrap;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con input.dev-widget-data-key, .dev-widget .dev-widget-update-data-con .dev-widget-data-con input.dev-widget-data-array {
+  grid-column: 2;
+  margin-right: 0.25em;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con input.dev-widget-data-value {
+  grid-column: 3;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-data-array > input, .dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-data-object > input {
+  width: 150%;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-add-value {
+  display: flex;
+  border-top: 1.5px solid white;
+  margin-top: 0.5em;
+  justify-content: space-between;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-add-value button {
+  margin: 0 auto;
+  padding-top: 0.25em;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-add-value .dev-widget-new-item {
+  flex: 2;
+}
+.dev-widget .dev-widget-settings-con {
+  color: white;
+  font-size: 1.25em;
+}
+.dev-widget .dev-widget-settings-con > div {
+  background-color: #202124;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  margin: 0.25em 0;
+  padding: 1em;
+}
+.dev-widget .dev-widget-settings-con div label {
+  padding: 0 0.5em;
+}
+.dev-widget .dev-widget-settings-con div input[type=checkbox] {
+  height: 1em;
+  width: 1em;
+}
+.dev-widget .dev-widget-settings-con h2 {
+  margin: 0;
+}
+.dev-widget .dev-widget-settings-con form {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr min-content;
+}
+.dev-widget .dev-widget-settings-con form hr {
+  grid-column: span 2;
+  width: 100%;
+}
+.dev-widget .dev-widget-display-message {
+  bottom: 0;
+  opacity: 0;
+  transition-property: bottom, opacity;
+  transition-duration: 1s, 1s;
+  text-align: center;
+  z-index: -1;
+}
+.dev-widget .dev-widget-slide-down {
+  bottom: -2em;
+  opacity: 1;
+}
 
-.dev-widget-display-visible .dev-widget-play {
+.dev-widget-display-visible .dev-widget-widget .dev-widget-play {
   background-color: #29AF1D;
 }
-.dev-widget-display-visible .dev-widget-next {
+.dev-widget-display-visible .dev-widget-widget .dev-widget-next {
   background-color: #F7B92B;
 }
-.dev-widget-display-visible .dev-widget-stop {
+.dev-widget-display-visible .dev-widget-widget .dev-widget-stop {
   background-color: #EB261F;
 }
-.dev-widget-display-visible .dev-widget-data button {
+.dev-widget-display-visible .dev-widget-widget .dev-widget-data button {
   background-color: #1177B7;
 }
 
@@ -68,7 +259,7 @@
 .dev-widget-display-open .dev-widget-invis:after {
   content: "Invis";
 }
-.dev-widget-display-open .dev-widget-controls, .dev-widget-display-open .dev-widget-visibility {
+.dev-widget-display-open .dev-widget-controls, .dev-widget-display-open .dev-widget-visibility, .dev-widget-display-open .dev-widget-info {
   display: flex;
   justify-content: space-around;
 }
@@ -102,6 +293,13 @@
   display: flex;
   flex-direction: column;
 }
+.dev-widget-display-open .dev-widget-options input {
+  border-bottom: 2px solid transparent;
+}
+.dev-widget-display-open .dev-widget-display-message {
+  position: absolute;
+  width: 100%;
+}
 
 /* Defines the element when hidden */
 .dev-widget-display-hide .dev-widget-widget, .dev-widget-display-hide .dev-widget-visibility {
@@ -116,7 +314,7 @@
 .dev-widget-display-hide .dev-widget-shrink:after {
   content: unset;
 }
-.dev-widget-display-hide .dev-widget-controls, .dev-widget-display-hide .dev-widget-options {
+.dev-widget-display-hide .dev-widget-controls, .dev-widget-display-hide .dev-widget-options, .dev-widget-display-hide .dev-widget-info, .dev-widget-display-hide .dev-widget-display-message {
   display: none;
 }
 
@@ -135,7 +333,7 @@
 .dev-widget-display-shrink .dev-widget-invis:after {
   content: "I";
 }
-.dev-widget-display-shrink .dev-widget-options {
+.dev-widget-display-shrink .dev-widget-options, .dev-widget-display-shrink .dev-widget-info, .dev-widget-display-shrink .dev-widget-display-message {
   display: none;
 }
 .dev-widget-display-shrink .dev-widget-controls, .dev-widget-display-shrink .dev-widget-visibility {
@@ -166,11 +364,15 @@
 
 .dev-widget-display-full-screen {
   align-items: center;
+  border-radius: 0;
   justify-content: center;
   margin: 0;
   padding: 0;
   height: 100vh;
   width: 100vw;
+}
+.dev-widget-display-full-screen .dev-widget-widget {
+  filter: blur(2px);
 }
 
 /*# sourceMappingURL=dev.css.map */

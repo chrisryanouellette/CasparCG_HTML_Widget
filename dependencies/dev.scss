@@ -9,15 +9,34 @@ $update: #1177B7;
 
 /* Main div element */
 .dev-widget {
-
+    border-radius: 5px;
     position: absolute;
     margin: 1em;
     padding: .25em;
+    top: 0;
 
-    input {
+    a, a:visited {
+        text-decoration: none;
+        color: white;
+    }
+
+    p {
+        margin: 0;
+    }
+
+    input, a {
         border: none;
         font-size: 1.25em;
         margin: .1em 0;
+        padding: 0 .25em;
+    }
+
+    textarea {
+        display: none;
+        min-width: 50vw;
+        min-height: 60vh;
+        font-size: 1.25em;
+        margin: .5em 0;
     }
 
     button {
@@ -28,10 +47,10 @@ $update: #1177B7;
         text-align: center;
     }
 
-    button, option, input, p {
+    button, option, input, h2, p, select, option, a, label, textarea {
         font-family: 'Catamaran', 'Arial';
     }
-    .dev-widget-controls button {
+    .dev-widget-controls button, .dev-widget-update-data-con {
         color: white;
     }
     .dev-widget-transparent {
@@ -42,12 +61,224 @@ $update: #1177B7;
 
         & button {
             margin: 0 auto;
-            padding: 0 .25em;
+            padding: 0 .5em;
+            white-space: nowrap;
         }
+    }
+
+    .dev-widget-position-con button {padding-left: unset;}
+
+    .dev-widget-settings-con, .dev-widget-update-data-con {
+        display: none;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        position: absolute;
+        top: 0;
+        height: 100vh;
+        width: 100vw;
+    }
+    
+    .dev-widget-update-controls, .dev-widget-update-prefs-controls {
+        display: flex;
+        justify-content: space-evenly;
+        button {
+            padding: 0 1em;
+            border-bottom: 1.5px solid transparent;
+            transition-property: border-bottom;
+            transition-duration: .5s;
+            &:hover:first-of-type {
+                border-bottom: 1.5px solid $stop;
+            }
+            &:hover:last-of-type {
+                border-bottom: 1.5px solid $update;
+            }
+        }
+    }
+
+    .dev-widget-update-data-con {
+        > div {
+            background-color: #202124;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,.5);
+            margin: .25em 0;
+            padding: 1em;
+        }
+
+        button {
+            color: white;
+        }
+
+        .dev-widget-data-header {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+
+            > * {
+                margin: 0;
+                padding: 0 .25em;
+            }
+
+            select, option, button {
+                font-size: 1em;
+                color: white;
+            }
+
+            select {
+                background-color: transparent;
+                border: none;
+            }
+
+            option {
+                color: black;
+                border: none;
+            }
+        }
+
+        .dev-widget-data-con {
+            .dev-widget-template-data-name {
+                border: none;
+                border-bottom: 1.5px solid white;
+                background-color: transparent;
+                color: white;
+                display: block;
+                margin: 0 0 0 auto;
+            }
+            .dev-widget-hidden-elements {
+                display: none;
+            }
+
+            form {
+                display: flex;
+                flex-direction: column;
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+
+            .dev-widget-data {
+                border: 1px solid transparent;
+                display: grid;
+                grid-template-columns: min-content 1fr 1fr;
+                grid-column: 1/3 span;
+                margin: .5em .25em;
+                padding: 0 .15em;
+
+                > button {
+                    display: flex;
+                    grid-column: 3;
+                    margin: 0 0 0 auto;
+                }
+            }
+
+            div.dev-widget-data-object, div.dev-widget-data-array{
+                border: 1px solid $update;
+            }
+
+            .dev-widget-message {
+                grid-column: span 2;
+            }
+
+            .dev-widget-data-type {
+                background-color: transparent;
+                border: none;
+                color: white;
+                grid-column: 1;
+                height: 3em;
+                width: min-content;
+
+                option {
+                    background-color: #202124;
+                    white-space: nowrap;
+                }
+            }
+
+            input.dev-widget-data-key, input.dev-widget-data-array {
+                grid-column: 2;
+                margin-right: .25em;
+            }
+
+            input.dev-widget-data-value {
+                grid-column: 3;
+            }
+
+            .dev-widget-data-array > input, .dev-widget-data-object > input {
+                width: 150%;
+            }
+
+            .dev-widget-add-value {
+                display: flex;
+                border-top: 1.5px solid white;
+                margin-top: .5em;
+                justify-content: space-between;
+
+                button {
+                    margin: 0 auto;
+                    padding-top: .25em;
+                }
+
+                .dev-widget-new-item {
+                    flex: 2;
+                }
+            }
+        }
+    }
+
+    .dev-widget-settings-con {
+        color: white;
+        font-size: 1.25em;
+
+        > div {
+            background-color: #202124;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,.5);
+            margin: .25em 0;
+            padding: 1em;
+        }
+
+        div {
+            label {
+                padding: 0 .5em;
+            }
+
+            input[type=checkbox] {
+                height: 1em;
+                width: 1em;
+            }
+        }
+
+        h2 {
+            margin: 0;
+        }
+
+        form {
+            align-items: center;
+            display: grid;
+            grid-template-columns: 1fr min-content;
+
+            hr {
+                grid-column: span 2;
+                width: 100%;
+            }
+        }
+
+    }
+
+    .dev-widget-display-message {
+        bottom: 0;
+        opacity: 0;
+        transition-property: bottom, opacity;
+        transition-duration: 1s, 1s;
+        text-align: center;
+        z-index: -1;
+    }
+
+    .dev-widget-slide-down {
+        bottom: -2em;
+        opacity: 1;
     }
 }
 
-.dev-widget-display-visible {
+.dev-widget-display-visible .dev-widget-widget {
     .dev-widget-play {
         background-color: $play;
     }
@@ -85,7 +316,7 @@ $update: #1177B7;
     .dev-widget-invis:after {
         content: 'Invis';
     }
-    .dev-widget-controls, .dev-widget-visibility {
+    .dev-widget-controls, .dev-widget-visibility, .dev-widget-info {
         display: flex;
         justify-content: space-around;
     }
@@ -118,6 +349,16 @@ $update: #1177B7;
     .dev-widget-options {
         display: flex;
         flex-direction: column;
+
+        input {
+            border-bottom: 2px solid transparent;
+        }
+    }
+
+    .dev-widget-display-message {
+        position: absolute;
+
+        width: 100%;
     }
 }
 
@@ -135,7 +376,7 @@ $update: #1177B7;
     .dev-widget-shrink:after {
         content: unset;
     }
-    .dev-widget-controls, .dev-widget-options {
+    .dev-widget-controls, .dev-widget-options, .dev-widget-info, .dev-widget-display-message {
         display: none;
     }
 }
@@ -154,7 +395,7 @@ $update: #1177B7;
     .dev-widget-invis:after {
         content: 'I';
     }
-    .dev-widget-options {
+    .dev-widget-options, .dev-widget-info, .dev-widget-display-message {
         display: none;
     }
     .dev-widget-controls, .dev-widget-visibility {
@@ -189,11 +430,15 @@ $update: #1177B7;
 }
 
 .dev-widget-display-full-screen {
-
     align-items: center;
+    border-radius: 0;
     justify-content: center;
     margin: 0;
     padding: 0;
     height: 100vh;
     width: 100vw;
+
+    .dev-widget-widget {
+        filter: blur(2px);
+    }
 }
