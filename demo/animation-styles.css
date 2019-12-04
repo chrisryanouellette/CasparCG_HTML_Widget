@@ -1,0 +1,78 @@
+/* Font from Google to clean up the text */
+@import url("https://fonts.googleapis.com/css?family=Catamaran:300&display=swap");
+html, body, main, .tag {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+.tag {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  opacity: 0;
+}
+.tag .container {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 5vh 2.5vh;
+  margin: 4vw 6vw;
+}
+.tag h1 {
+  font-size: 2.5em;
+  font-weight: 300;
+  margin: 0 auto;
+  white-space: nowrap;
+  padding: 0 1em;
+}
+.tag span {
+  font-weight: 600;
+}
+.tag .name-con {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: 100%;
+  z-index: -1;
+}
+.tag .name-bkg {
+  fill: none;
+  clip-path: url(#main-clip);
+  stroke: #00C657;
+  stroke-width: 0.5vw;
+}
+.tag .name-bkg-clip {
+  width: 100%;
+  height: 110%;
+}
+.tag .name-con, .tag .name-bkg-clip {
+  grid-column: 1;
+  grid-row: 1;
+}
+.tag h1, .tag p {
+  font-family: "Catamaran", "Arial";
+  text-align: center;
+}
+.tag .subtitle {
+  background-color: #00C657;
+  clip-path: url(#subtitle-clip);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.tag .subtitle-clip-svg {
+  width: 100%;
+}
+.tag .subtitle, .tag .subtitle-clip-svg {
+  grid-column: 1;
+  grid-row: 2;
+}
+.tag p {
+  font-size: 1.25em;
+  margin: 0 auto;
+}
+
+/*# sourceMappingURL=animation-styles.css.map */
