@@ -104,9 +104,9 @@ Click <span class="update">Update Data</span> to edit the data values the templa
 To remove data, select "remove" option in the drop down menu.
 `, "text/html"
             );
-            return logMessage(message.querySelector('body').childNodes);
+            return DEMO.logMessage(message.querySelector('body').childNodes);
         } else {
-            return logMessage('Welcome to the CasparCG HTML Widget.');
+            return DEMO.logMessage('Welcome to the CasparCG HTML Widget.');
         }
     });
 
