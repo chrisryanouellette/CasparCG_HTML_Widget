@@ -16,22 +16,33 @@ const DEMO = (function() {
         name: 'DEMO',
         data: {
             name: 'Demo Lower Third',
-            text: [
-                {
-                    name: 'John Smith',
-                    title: 'President'
-                }, {
-                    name: 'Jane Adams',
-                    title: 'Accounting Manmanger'
+            data: {
+                text: [
+                    {
+                        name: 'John Smith',
+                        title: 'President'
+                    }, {
+                        name: 'Jane Adams',
+                        title: 'Accounting Manmanger'
+                    }
+                ], style: {
+                    primaryColor: '#789',
+                    textColor: '#000',
+                    position: 'center'
                 }
-            ], style: {
-                primaryColor: '#789',
-                textColor: '#000',
-                position: 'center'
-            }, playoutInfo: {
+            },
+            playoutInfo: {
                 channel: 1,
                 layer: 1,
                 playOnLoad: false,
+                autoComplete: false,
+                duration: 5,
+                removeSelf: false,
+                clearSelf: false
+            },
+            isLoadData: true,
+            server: {
+                URL: 'http://localhost:3000'
             }
         }
     }
@@ -104,11 +115,11 @@ Click <span class="update">Update Data</span> to edit the data values the templa
 To remove data, select "remove" option in the drop down menu.
 `, "text/html"
             );
-            return DEMO.logMessage(message.querySelector('body').childNodes);
+            return logMessage(message.querySelector('body').childNodes);
         } else {
-            return DEMO.logMessage('Welcome to the CasparCG HTML Widget.');
+            return logMessage('Welcome to the CasparCG HTML Widget.');
         }
-    });
+    }).catch(e => console.error(e));
 
     return {
         // Clears all the messages on the message board

@@ -7,45 +7,39 @@ const DEV_SCRIPT_URL = 'http://localhost:3000/dev.js';
 
 // Loads the dev script
 window.onload = () => {
-    try {
-        if(ENV && ENV === 'DEV') {
-            const script = document.createElement('script');
-            script.type = "application/javascript";
-            script.src = DEV_SCRIPT_URL;
-            document.querySelector('body').append(script);
-        }
-    } catch (error) {
-        return console.error('Error attempting to test env.')
-    }
+    ccg.initalizeDevelopmentEnviorment(DEV_SCRIPT_URL);
 };
 
 // The index of data to show
 let index = 0;
 
-//  The timeline position
-// tlprogress = 0 -> Template needs to be loaded
-// tlprogress = 1 -> Template has been loaded, needs to be played
-// tl progress = 2 -> Template has been played, needs to be stopped or advanced
-// tlprogress = 3 -> Template has been stopped, needs to be played
-let tlprogress = 0,
-//  Info about the template
-    templateInfo = {};
+ccg.defineData({
+    text: [{
+        name: {type: 'string', required: true},
+        title: 'string'
+    }],
+    style: {
+        primaryColor: {type: 'string', required: true},
+        textColor: {type: 'string', required: true},
+        position: 'string'
+    }
+});
 
 // Promise that waits for all the template style and text data to be set
-function setTemplateData() {
+ccg.updateElementData = function(data) {
     return new Promise((resolve, reject) => {
-        Promise.all([setUpStyles(), setUpTexts()])
+        Promise.all([setUpStyles(data.style), setUpTexts(data.text)])
         .then(() => {
             index++;
+            logMessage('Graphic has been Updated');
             return resolve();
         })
         .catch(error => reject(error));
-    })
-    
+    });
 }
 
 // Set all gthe templates styles
-function setUpStyles() {
+function setUpStyles(style) {
     return new Promise((resolve, reject) => {
        try {
             const h1 = document.querySelector('h1'),
@@ -54,12 +48,12 @@ function setUpStyles() {
                 nameBKG = document.querySelector('.name-bkg'),
                 subtitle = document.querySelector('.subtitle');
 
-            h1.style.color = templateInfo.style.textColor;
-            p.style.color = templateInfo.style.textColor;
-            nameBKG.style.stroke = templateInfo.style.primaryColor;
-            subtitle.style.backgroundColor = templateInfo.style.primaryColor;
+            h1.style.color = style.textColor;
+            p.style.color = style.textColor;
+            nameBKG.style.stroke = style.primaryColor;
+            subtitle.style.backgroundColor = style.primaryColor;
 
-            switch(templateInfo.style.position) {
+            switch(style.position) {
                 case 'center': 
                     tag.style.alignItems = 'center';
                     break;
@@ -73,17 +67,17 @@ function setUpStyles() {
 
             return resolve();
        } catch (error) {
-           return reject(`${templateInfo.name} failed to set it's styles`);
+           return reject(`Failed to set styles`);
        }
     });
 }
 
 // Sets all the templates element's text
-function setUpTexts() {
+function setUpTexts(text) {
     return new Promise((resolve, reject) => {
         try {
-            if(index <= templateInfo.text.length - 1) {
-                const name = templateInfo.text[index].name,
+            if(index <= text.length - 1) {
+                const name = text[index].name,
                     h1 = document.querySelector('h1'),
                     span = document.createElement('span'),
                     p = document.querySelector('p');
@@ -91,20 +85,20 @@ function setUpTexts() {
                 h1.textContent = name.substring(0, name.indexOf(' '));
                 span.textContent = name.substring(name.indexOf(' '));
                 h1.appendChild(span);
-                p.textContent = templateInfo.text[index].title;
+                p.textContent = text[index].title;
     
                 return resolve();
             } else {
-                return reject(`${templateInfo.name} is out of names to display (${templateInfo.text.length})`);
+                return reject(`Out of names to display (${text.length})`);
             }
         } catch (error) {
-            return reject(`${templateInfo.name} had an issue settings it's texts. ${error}`)
+            return reject(`Error settings it texts. ${error}`)
         }
     });
 }
 
 // Sets the Elements initial state
-function setTemplateElements() {
+ccg.setupAnimation = function() {
     return new Promise((resolve, reject) => {
         try {
             const tl = new TimelineMax({onComplete: resolve});
@@ -129,111 +123,40 @@ function setTemplateElements() {
                 })
                 .set('.tag', {opacity: 1});
         } catch (error) {
-            return reject(`${templateInfo.name} had an error setting template elements. ${error}`);
+            return reject(error);
         }
     });
 }
 
-// The template's update function that is responsible for all the setup
-// @param {string} rawData - Raw JSON to be parsed and used to setup the graphic
-function update(rawData) {
-    let data;
-    if(!rawData) return logError('Template requires data.');
-    try {
-        data = JSON.parse(rawData);
-    } catch(e) {
-        return logError('Cannot parse JSON');
-    }
-    // Template requires data when updating
-    if(!data || !Object.keys(data).length || data.noData) {
-        return console.error('Template required data')
-    // If the data being sent is load data
-    } else {
-        templateInfo = data;
-        if(tlprogress === 0) {
-            setTemplateData()
-            .then(setTemplateElements)
-            .then(() => {
-                tlprogress = 1;
-                logMessage(`${templateInfo.name} has loaded. (updated)`);
-                if(templateInfo.playoutInfo.playOnLoad) return play();
-            }).catch(error => logError(error));
-        } else {
-            index--;
-            setTemplateData().then(() => {
-                logMessage(`${templateInfo.name} has been Updated`);
-            });
-        }
-       
-        
-    }
-}
-
-// Animates in the graphic
-function play() {
-    if(tlprogress === 0) {
-        return logError("Run the <span class='update'>Update</span> command with some data to load the graphic");
-    } else if(tlprogress === 2) {
-        return logError('The graphic needs to be <span class="next">Advanced</span> or <span class="stop">Stopped</span>')
-    }
-    animateIn().then(() => {
-        tlprogress = 2;
-        logMessage(`${templateInfo.name} has animated in.`);
-    });
-}
-
-// Advances the graphic
-function next() {
-    if(tlprogress === 0) {
-        return logError("Run the <span class='update'>Update</span> command with some data to load the graphic");
-    } else if(tlprogress === 1 || tlprogress === 3) {
-        return logError('The graphic needs to be <span class="play">Played</span>');
-    }
-    if(index > templateInfo.text.length - 1) 
-        return logError(`${templateInfo.name} is out of names to show and should be <span class="stop">Stopped</span>`);
-    logMessage(`${templateInfo.name} is Advancing to show ${templateInfo.text[index].name} ${index + 1} of ${templateInfo.text.length}`);
-    return animateTemplateOut()
-        .then(setUpTexts)
-        .then(animateTemplateIn)
-        .then(() => {
-            index++;
-            return logMessage(`${templateInfo.name} has Advanced.`);
-        })
-        .catch(error => reject(`${templateInfo.name} had an issue while advancing. ${error}`));
-}
-
-// Animates the graphic out
-function stop() {
-    if(tlprogress === 0) {
-        return logError("Run the <span class='update'>Update</span> command with some data to load the graphic");
-    } else if(tlprogress === 1 || tlprogress === 3) {
-        return logError('The graphic needs to be <span class="play">Played</span>');
-    }
-    animateOut().then(() => {
-        tlprogress = 3;
-        logMessage(`${templateInfo.name} has animated out.`);
-    });
-}
-
-function animateIn() {
+ccg.animateIn = function() {
     return new Promise((resolve, reject) => {
         try {
             const tl = new TimelineMax({onComplete: resolve});
-
             tl.to('#subtitle-clip rect', 1, {scaleX: 1,ease: Power2.easeInOut})
                 .to('.subtitle', .5, {y: 0,ease: Power2.easeInOut}, '-=.25')
                 .to(document.querySelectorAll('#main-clip rect'), 1, {x: 0,ease: Power2.easeInOut}, '-=.5')
                 .to('h1', .5, {y: 0,ease: Power2.easeOut}, '-=.5')
                 .set(['.name-con', '.subtitle'], {"clip-path": 'none'});
         } catch (error) {
-            return reject(`${templateInfo.name} had an error while ANIMATING IN. ${error}`);
+            return reject(error);
         }
+   }).then(() => {
+       logMessage('Graphic has Animated In');
    });
 }
 
- const animateTemplateOut = () => {
-     return new Promise((resolve, reject) => {
-         try {
+ccg.shouldAdvance = function({data, playoutInfo}) {
+    if(index <= data.text.length - 1) {
+        return true;
+    } else {
+        if(playoutInfo.autoComplete) return {error: true, solution: window.stop};
+        return {error: true, message: `Graphic is out of tags`};
+    }
+}
+
+ccg.advanceOut = function() {
+    return new Promise((resolve, reject) => {
+        try {
             const tl = new TimelineMax({onComplete: resolve});
             let width = window.getComputedStyle(document.querySelector('.container'))
                 .getPropertyValue('width');
@@ -243,37 +166,48 @@ function animateIn() {
                 .to('p', .5, {y: '3vh'}, '-=.5')
                 .set('.container', {width})
                 .set('h1', {opacity: 0});
-         } catch (error) {
-             return reject(`${templateInfo.name} had an issue while ADVANCING (Out). ${error}`);
-         }
-     });
- }
- 
- const animateTemplateIn = () => {
-     return new Promise((resolve, reject) => {
-         try {
-            const tl = new TimelineMax({onComplete: resolve});
-            let h1Width = window.getComputedStyle(document.querySelector('h1'))
-                .getPropertyValue('width');
-            let h1Padding = window.getComputedStyle(document.querySelector('h1'))
-                .getPropertyValue('padding-left');
-            h1Width = Number(h1Width.substring(0, h1Width.indexOf('px')));
-            h1Padding = Number(h1Padding.substring(0, h1Padding.indexOf('px')));
+        } catch (error) {
+            return reject(error);
+        }
+    });
+}
 
-            const width = h1Width + (h1Padding * 2);
+ccg.advanceData = function(data) {
+    return new Promise((resolve, reject) => {
+        setUpTexts(data.text).then(() => {
+            index++;
+            return resolve();
+        });
+    });
+}
 
- 
-             tl.set('h1', {x: width * 2, opacity: 1})
-                 .to('.container', .5, {width: width})
-                 .to('h1', .5, {x: 0,ease: Power2.easeOut}, '-=.25')
-                 .to('p', .5, {y: 0}, '-=.5');
-         } catch (error) {
-             return reject(`${templateInfo.name} had an issue while ADVANCING (In). ${error}`);
-         }
-     });
- }
+ccg.advanceIn = function() {
+    return new Promise((resolve, reject) => {
+        try {
+           const tl = new TimelineMax({onComplete: resolve});
+           let h1Width = window.getComputedStyle(document.querySelector('h1'))
+               .getPropertyValue('width');
+           let h1Padding = window.getComputedStyle(document.querySelector('h1'))
+               .getPropertyValue('padding-left');
+           h1Width = Number(h1Width.substring(0, h1Width.indexOf('px')));
+           h1Padding = Number(h1Padding.substring(0, h1Padding.indexOf('px')));
 
- function animateOut() {
+           const width = h1Width + (h1Padding * 2);
+
+
+            tl.set('h1', {x: width * 2, opacity: 1})
+                .to('.container', .5, {width: width})
+                .to('h1', .5, {x: 0,ease: Power2.easeOut}, '-=.25')
+                .to('p', .5, {y: 0}, '-=.5');
+        } catch (error) {
+            return reject(error);
+        }
+    }).then(() => {
+        logMessage('Graphic has Advanced');
+    });
+}
+
+ccg.animateOut = function() {
     return new Promise((resolve, reject) => {
         try {
             const tl = new TimelineMax({onComplete: resolve, onCompleteParams: [{key: 'text', index}]});
@@ -291,46 +225,46 @@ function animateIn() {
                 .to('.subtitle', .5, {y: '-5vh'}, '-=.5')
                 .to('#subtitle-clip rect', 1, {scaleX: 0,ease: Power2.easeInOut}, '-=.25');
         } catch (error) {
-            return reject(`${templateInfo.name} had an error while ANIMATING OUT. ${error}`);
+            return reject(error);
         }
+    }).then(() => {
+        logMessage('Graphic has Animated Out');
     });
- }
+}
  
- // Custom Command - Reset - Resets the tag to the first one given on load
- function reset() {
-     if(templateInfo.text.length <= 1) 
-         return logError(`${templateInfo.name} does not have more than one name`);
-     index = 0;
-     if(tlprogress === 2) {
-         return next();
-     } else {
-         document.querySelector('.tag').style.opacity = 0;
-         return setTemplateData()
-             .then(setTemplateElements)
-             .then(() => logMessage(`${templateInfo.name} has reset and is now showing ${templateInfo.text[index - 1].name} [${index} of ${templateInfo.text.length}]`))
-     }   
- }
- 
- // Custom Command - Previous Tag - Goes to the previous name if possible
- function previousTag() {
-     if(tlprogress === 0) {
-        return logError("Run the <span class='update'>Update</span> command with some data to load the graphic"); 
-     }
-     if(index > 1) {
-         index = index - 2;
-         tlprogress = 2;
-         return next();
-     } else if(templateInfo.text.length === 1) {
-         return logError(`${templateInfo.name} only has 1 name`);
-     } else {
-         return logError( `${templateInfo.name} can not go back one name`);
-     }
- }
- 
- // Custom Command - Next Tag - Goes to the next name if possible
- function nextTag() {
-     return next();
- }
+ccg.registerCC('reset', function() {
+    return new Promise((resolve, reject) => {
+        const data = ccg.data();
+        if(data.text.length <= 1) return reject('There is only one tag');
+        if(index === 1) return reject('Already on the first tag');
+        index = 0;
+        if(ccg.progress() === 2) {
+            resolve();
+            return next();
+        } else {
+            document.querySelector('.tag').style.opacity = 0;
+            return ccg.updateElementData(data)
+                .then(ccg.setupAnimation)
+                .then(() => resolve());
+        }   
+    }).then(() => {
+        logMessage('Graphic has been reset');
+    });
+});
+
+ccg.registerCC('previousTag', function() {
+    const data = ccg.data();
+    if(index > 1) {
+        index = index - 2;
+        return next();
+    } else if(data.text.length === 1) {
+        return logError(`${data.localName} only has 1 name`);
+    } else {
+        return logError( `${data.localName} can not go back one name`);
+    }
+});
+
+ccg.registerCC('nextTag', next);
 
 /*
     Helper Functions
