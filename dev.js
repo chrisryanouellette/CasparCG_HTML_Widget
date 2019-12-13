@@ -1235,12 +1235,12 @@ The position input can work with or without commas, a space is required at minim
             const store = getObjectStore(DB.DB_STORE_NAME, 'readwrite');
             if(templateData.id) {
                 const req = store.get(data.id);
-                req.onsuccess = function(evt) {
+                req.onsuccess = function(event) {
                     event.target.result.data = data.data;
                     event.target.result.name = data.name;
                     const reqUpd = store.put(event.target.result);
                     reqUpd.onerror = function(error) {
-                        return reject("modfiyTemplateData: " + evt.target.errorCode);
+                        return reject("modfiyTemplateData: " + event.target.errorCode);
                     }
                     reqUpd.onsuccess = function(e) {
                         templateData = data;
