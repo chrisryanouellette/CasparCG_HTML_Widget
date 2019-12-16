@@ -14,7 +14,8 @@ const DEVWIDGET = (function() {
         DB_NAME: 'dev-widget',
         DB_VERSION: 1,
         DB_STORE_NAME: 'template-data',
-        db: null
+        db: null,
+        CASPAR: false
     }
 
     // If the app has loaded the widget and the css as well as atached the needed event listeners.
@@ -168,29 +169,38 @@ const DEVWIDGET = (function() {
     // Gets all the stored template data and 
     // sets templateData equal to the data for this web page
     async function initailizeTemplateData() {
-        // Get all the stored template data
-        await getTemplateData(null).then(results => {
-            if(!results) return;
-            const select = document.querySelector('.dev-widget-other-data');
-            const location = window.location.pathname.substring(1).replace(/\//g, '-');
-            // Find the inde of the data for this template
-            const index = results.findIndex(i => i.location === location);
-            if(index !== -1) {
-                templateData = results.splice(index, 1)[0];
-            } else {
-                console.warn(`${location} does not have any template data`);
+        const location = window.location.pathname.substring(1).replace(/\//g, '-');
+        // If the template is in Caspar, use local storage
+        if(DB.CASPAR) {
+            try {
+                templateData = getLocalStorage(location);
+            } catch (error) {
+                if(error.message) console.error('Error with template data: ' + error.message);
             }
-            // Add any additonal data options to the import select element
-            results.length && results.forEach(i => {
-                const option = document.createElement('option');
-                option.value = i.location;
-                option.textContent = i.name;
-                select.append(option);
+        // Else, use IndexedDB
+        } else {
+            await getTemplateData(null).then(results => {
+                if(!results) return;
+                const select = document.querySelector('.dev-widget-other-data');
+                // Find the inde of the data for this template
+                const index = results.findIndex(i => i.location === location);
+                if(index !== -1) {
+                    templateData = results.splice(index, 1)[0];
+                } else {
+                    console.warn(`${location} does not have any template data`);
+                }
+                // Add any additonal data options to the import select element
+                results.length && results.forEach(i => {
+                    const option = document.createElement('option');
+                    option.value = i.location;
+                    option.textContent = i.name;
+                    select.append(option);
+                });
+            })
+            .catch(error => {
+                return console.error(error);
             });
-        })
-        .catch(error => {
-            return console.error(error);
-        });
+        }
     }
 
     // Sets the input values in the .dev-widget-settings-con to their correct values
@@ -212,6 +222,7 @@ const DEVWIDGET = (function() {
     async function initializeDevEnv() {
         // Test the envioment variable to detemine if the widgit should continue loading.
         try {
+            if(window.caspar) DB.CASPAR = true;
             if(window.location.search) {
                 // The url param to use to consider dev ENV
                 const regex = new RegExp('[\\?&]' + 'debug' + '=([^&#]*)');
@@ -220,6 +231,7 @@ const DEVWIDGET = (function() {
                 // Warn if debug was in the url and it was not set to DEV
                 if(value && value !== 'true')
                     throw 'Template url is set to Production';
+                
             } else if(ENV !== 'DEV') {
                 throw new Error('Template enviorment is not set to DEV');
             }
@@ -241,9 +253,7 @@ const DEVWIDGET = (function() {
 
         // Attempt to load data from the local storage
         try {
-            if(!localStorage.length) throw new Error();
-            devData = JSON.parse(localStorage.getItem('devWidget'));
-            if(!Object.keys(devData).length) throw new Error({message: 'Dev Data storaged in local storage has no keys'});
+            devData = getLocalStorage('devWidget');
             if(devData.userPrefs) {
                 userPrefs = compareObjects(devData.userPrefs, userPrefs);
             } 
@@ -277,18 +287,6 @@ The position input can work with or without commas, a space is required at minim
         if(userPrefs.callUpdateOnLoad) {
             if(!Object.keys(templateData).length) return console.error("This template has no data. Us the 'Update Data' button to add some.");
             return update(JSON.stringify(templateData.data));
-        }
-    }
-
-    // Compares the update sent and current data and saves it to local storage
-    // @param {object} update - The new updates to be saved
-    function saveWidgetData(update) {
-        if(!initialized) return;
-        try {
-            devData = compareObjects(update, JSON.parse(localStorage.getItem('devWidget')));
-            localStorage.setItem('devWidget', JSON.stringify(devData));
-        } catch (error) {
-            return console.error('Error attempting to save dev data');
         }
     }
 
@@ -374,7 +372,7 @@ The position input can work with or without commas, a space is required at minim
         }
         const display = classList.toString();
         // Save the data
-        return saveWidgetData({display});
+        return setLocalStorage('devWidget', {display});
     }
     //Can exept Top, Bottom, Right, Left, and or a set of pixel values
     // @param {object} top position, right position - The positions of the widget
@@ -426,7 +424,7 @@ The position input can work with or without commas, a space is required at minim
 
             // If we aren't dragging the widget, save the data
             if(!dragging) {
-                return saveWidgetData({position: positions});
+                return setLocalStorage('devWidget', {position: positions});
             }
 
         } catch (error) {
@@ -456,7 +454,7 @@ The position input can work with or without commas, a space is required at minim
             dragging = false;
             document.removeEventListener('mousemove', dragWidget);
             if(!devData.position || position != devData.position[0])
-                return saveWidgetData({position: [e.clientY - 50, e.clientX - 50]});
+                return setLocalStorage('devWidget', {position: [e.clientY - 50, e.clientX - 50]});
         }
     }
 
@@ -474,7 +472,7 @@ The position input can work with or without commas, a space is required at minim
             // If the value is a url, set the background image to the url
             if(rawValue.includes('http')) {
                 document.querySelector('body').style.backgroundImage = `url(${rawValue})`;
-                return saveWidgetData({backgroundColor: `${rawValue}`});
+                return setLocalStorage('devWidget', {backgroundColor: `${rawValue}`});
             }
             // Get the inverted color of the set background color
             const val = adjustColor(rawValue, {});
@@ -505,7 +503,7 @@ The position input can work with or without commas, a space is required at minim
                 modifyAttrValues(['.dev-widget-widget input', '.dev-widget-display-message p'], {all: true, type: 'style', attr: 'color', value: invert});
             }
             
-            return saveWidgetData({backgroundColor: rawValue});
+            return setLocalStorage('devWidget', {backgroundColor: rawValue});
         } catch(error) {
             displayMessage(error);
             return console.error(error);
@@ -520,7 +518,7 @@ The position input can work with or without commas, a space is required at minim
         } else {
             document.querySelector('.dev-widget-custom-command').value = e;
         }
-        return saveWidgetData({customCommand: e});
+        return setLocalStorage('devWidget', {customCommand: e});
     }
 
     // If the command is defined, it runs a playout command 
@@ -583,9 +581,9 @@ The position input can work with or without commas, a space is required at minim
     }
 
     // Decodes the template data from the DOM and saves it browser's indexed DB
-    function saveTemplateData() {
+    function saveTemplateData(json) {
         try {
-            const json = document.querySelector('.dev-widget-data-con form').style.display !== 'none' 
+            if(!json) json = document.querySelector('.dev-widget-data-con form').style.display !== 'none' 
                 ? decodeElementstoData()
                 : JSON.parse(document.querySelector('.dev-widget-data-con textarea').value);
             if(!json || !Object.keys(json)) return console.error('There was an error encoding the template data');
@@ -594,10 +592,16 @@ The position input can work with or without commas, a space is required at minim
             const update = {name, location: window.location.pathname.substring(1).replace(/\//g, '-'), data: json};
             // If the data needs to be updated, add the id
             if(templateData.id) update.id = templateData.id;
-            modifyTemplateData(update)
-                // Hide the .dev-widget-data-con
-                .then(toggleEditTempateData)
-                .catch(error => console.error("Something went wrong with saving the tempalte's data", error));
+            if(DB.CASPAR) {
+                setLocalStorage(update.location, update);
+            } else {
+                modifyTemplateData(update)
+                    // Hide the .dev-widget-data-con
+                    .then(toggleEditTempateData)
+                    .catch(error => 
+                        console.error("Something went wrong with saving the tempalte's data", error));
+            }
+           
         } catch (error) {
             return console.error('There was an error seting the template data.', error);
         }
@@ -879,11 +883,17 @@ The position input can work with or without commas, a space is required at minim
         }
         // Close the settings window
         toggleEditSettings();
-        return saveWidgetData({userPrefs});
+        return setLocalStorage('devWidget', {userPrefs});
     }
 
     /* 
-        Helper Funtions ---------------------------------------------------------------------------
+        Helper Funtions 
+        ---------------------------------------------------------------------------
+        
+        
+
+
+        ---------------------------------------------------------------------------
     */
 
     //  Checks for spaces in a value and if they are found, splits and adds each value together
@@ -1164,6 +1174,23 @@ The position input can work with or without commas, a space is required at minim
         }
     }
 
+    function getLocalStorage(name) {
+        if(!localStorage.length) throw new Error();
+        const data = JSON.parse(localStorage.getItem(name));
+        if(!Object.keys(data).length) throw new Error(name + ' has no data stored in it');
+        return data;
+    }
+
+    function setLocalStorage(name, update) {
+        if(!initialized) return;
+        try {
+            const data = compareObjects(update, JSON.parse(localStorage.getItem(name)));
+            localStorage.setItem(name, JSON.stringify(data));
+        } catch (error) {
+            return console.error('Error attempting to save ' + name + ' ' + error.message);
+        }
+    }
+
     // Opens a connection to the browser's indexedDB
     function opendDBConnection() {
         return new Promise((resolve, reject) => {
@@ -1247,13 +1274,13 @@ The position input can work with or without commas, a space is required at minim
                         return resolve();
                     }
                 };
-                req.onerror = function (evt) {
-                    return reject("clearObjectStore: " + evt.target.errorCode)
+                req.onerror = function (event) {
+                    return reject("clearObjectStore: " + event.target.errorCode)
                 };
             } else {
                 const req = store.add(data);
                 req.onerror = function(error) {
-                    return reject("modfiyTemplateData: " + evt.target.errorCode);
+                    return reject("modfiyTemplateData: " + event.target.errorCode);
                 }
                 req.onsuccess = function(e) {
                     templateData = data;
@@ -1859,6 +1886,24 @@ Example (Copy): DEVWIDGET.setCustomCommand('reset')`
         toggleEditTempateData,
         // Gets the tempalte data and retuns it as a string
         getWidgetTemplateData: () => {return JSON.stringify(templateData.data)},
+        // Sets the template's data
+        setWidgetTemplateData: (data) => {
+            if(!data) return console.log(
+`DEVWIDGET.setWidgetTemplateData(data)
+Sets the data that is used for the Update Command.
+    @param {object} data - A JSON object to be used as the widgets template data
+Example (Copy): DEVWIDGET.setWidgetTemplateData({name: "new name", isLoadData: true})
+The Data window will open so run: DEVWIDGET.toggleEditTempateData()`
+                );
+            if(typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (error) {
+                    return console.error('Invalid JSON: ', error.message);
+                }
+            }
+            return saveTemplateData(data);
+        },
         // Toggles if the widget should be in a dragging state
         toggleDragWidget: function(bool) {
             if(typeof bool === 'undefined') return console.log(
@@ -1880,21 +1925,60 @@ Example (Copy): DEVWIDGET.toggleDragWidget(true)`
         setWidgetData: (raw) => {
             if(typeof raw === 'undefined') return console.log( 
 `DEVWIDGET.setWidgetData(raw)
-Pass a JSON onject as a string to set the widgets data.
+Pass a JSON object as a string to set the widgets data.
     @param {string} raw - The JSON object as a string
 Example (Copy): DEVWIDGET.setWidgetData('{"position":[200,200]}');
 `);
             try {
                 const json = JSON.parse(raw);
-                saveWidgetData(json);
+                setLocalStorage('devWidget', json);
                 return 'Widget data set, refresh to apply changes.';
             } catch (error) {
                 console.error('Error parsing or setting JSON.', error);
                 return null;
             }
         },
+        getUserData: function() {return JSON.stringify(userPrefs)},
+        // Sets the User's settings
+        setUserData: function(data) {
+            if(!data) return console.log( 
+`DEVWIDGET.setUserData(data)
+Pass an JSON oas a string to set the user's settings 
+    @param {string || object} data - The data to be used as the user's settings 
+Example (Copy):  DEVWIDGET.setUserData('{"displayUpdates":true,"callUpdateOnLoad":false,"displayTemplateAsGui":true}');
+`
+            );
+            if(typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (error) {
+                    return console.error('Invalid JSON: ', error.message);
+                }
+            }
+            const invalid = Object.keys(data).filter(key => {
+                if(!Object.keys(userPrefs).includes(key)) return true;
+                return false;
+            });
+            if(invalid.length) 
+                return console.error('Invalid user settings');
+            userPrefs = data;
+            return setLocalStorage('devWidget', {userPrefs});
+        },
+        // AMCP Commands
+        update: function() {
+            return runPlayoutCommand({target: {name: 'update'}});
+        },
+        play: function() {
+            return runPlayoutCommand({target: {name: 'play'}});
+        },
+        next: function() {
+            return runPlayoutCommand({target: {name: 'next'}});
+        },
+        stop: function() {
+            return runPlayoutCommand({target: {name: 'stop'}});
+        },
         /*
-
+            Get all the avaibible functions
         */
         help: 
 `We are here to help!
@@ -1911,7 +1995,15 @@ DEVWIDGET.setWidgetPosition()
 DEVWIDGET.toggleDragWidget()
 DEVWIDGET.toggleEditTempateData()
 DEVWIDGET.getWidgetTemplateData()
+DEVWIDGET.setWidgetTemplateData()
 DEVWIDGET.getWidgetData()
-DEVWIDGET.setWidgetData()`
+DEVWIDGET.setWidgetData()
+DEVWIDGET.getUserData()
+DEVWIDGET.setUsetData()
+DEVWIDGET.update()
+DEVWIDGET.play()
+DEVWIDGET.next()
+DEVWIDGET.stop()
+`
     }
 }());
