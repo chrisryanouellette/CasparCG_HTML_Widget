@@ -85,7 +85,7 @@ const DEMO = (function() {
             const store = getObjectStore(DB.DB_STORE_NAME, 'readwrite');
             const req = store.get(data.location);
             req.onerror = function(error) {
-                return reject("modfiyTemplateData: " + evt.target.errorCode);
+                return reject("modfiyTemplateData: " + error.target.errorCode);
             }
             req.onsuccess = function(e) {
                 if(!e.target.result) {
@@ -97,12 +97,12 @@ const DEMO = (function() {
     }
 
     // Initializes the template setup
-    opendDBConnection()
-    .then(() => modifyTemplateData(fakeData))
-    .then(() => {
-        if(!localStorage.getItem('devWidget')) {
-            const parser = new DOMParser();
-            const message = parser.parseFromString(
+    function initialize() {
+        const logResult = function() {
+            return new Promise((resolve, reject) => {
+                if(!localStorage.getItem('devWidget')) {
+                    const parser = new DOMParser();
+                    const message = parser.parseFromString(
 `
 Welcome to CasparCG HTML Widget! </br>
 <hr>
@@ -114,12 +114,32 @@ Click <span class="update">Update Data</span> to edit the data values the templa
 <hr>
 To remove data, select "remove" option in the drop down menu.
 `, "text/html"
-            );
-            return logMessage(message.querySelector('body').childNodes);
-        } else {
-            return logMessage('Welcome to the CasparCG HTML Widget.');
+                    );
+                    return DEMO.logMessage(message.querySelector('body').childNodes);
+                } else {
+                    return DEMO.logMessage('Welcome to the CasparCG HTML Widget.');
+                }
+            })
         }
-    }).catch(e => console.error(e));
+        if(window.caspar) {
+            let data;
+            try {
+                data = JSON.parse(localStorage.getItem(fakeData.location));
+                if(!data || !Object.keys(data).length) {
+                    localStorage.setItem(fakeData.location, JSON.stringify(fakeData));
+                    logResult();
+                }
+            } catch (error) {
+                return console.error(error.message);
+            }
+        } else {
+            opendDBConnection()
+            .then(() => modifyTemplateData(fakeData))
+            .then(logResult).catch(e => console.error(e));
+        }
+    }
+
+    initialize();
 
     return {
         // Clears all the messages on the message board

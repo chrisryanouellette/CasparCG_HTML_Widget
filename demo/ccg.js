@@ -85,9 +85,9 @@ const ccg = (function() {
                     },
                     body: JSON.stringify({username, password})
                 })
-                .then(res => res.json())
+                .then(res => checkRequestResult(res, null, null))
                 .then(result => {
-                    graphic.isAuthenitcated = true;
+                    SERVER.isAuthenitcated = true;
                     return resolve();
                 }).catch(error => reject(error.message));
             } catch (error) {
@@ -124,7 +124,7 @@ const ccg = (function() {
     async function checkCommandBuffer(command, param) {
         if(graphic.playoutInfo.hasBeenCleared) {
             commandBuffer.commands = [];
-            return logMessage({message: 'Graphic has been cleared', error: true});;
+            return logMessage({message: 'Template has been cleared', error: true});;
         }
         if(typeof commandBuffer.threshold === 'number' 
         && commandBuffer.commands.length >= commandBuffer.threshold) {
@@ -138,7 +138,6 @@ const ccg = (function() {
                 commandBuffer.commands.shift();
                 if(commandBuffer.commands.length) checkCommandBuffer();
             }).catch(e => {
-                logError(e);
                 commandBuffer.commands = [];
                 return logMessage({message: e, error: true});
             });
@@ -164,7 +163,7 @@ const ccg = (function() {
         } catch (error) {
             return logMessage({message: 'Error parsing JSON data', error: true});
         }
-        if(!graphic.isAuthenitcated) {
+        if(!SERVER.isAuthenitcated) {
             // Attempt Authenitcation
             try {
                 await authenticate({
@@ -208,7 +207,6 @@ const ccg = (function() {
             try {
                 setTemplateData(parsed.data);
             } catch (error) {
-                logError(error.message);
                 return logMessage({message: error.message, error: true});
             }
         }
@@ -244,7 +242,7 @@ const ccg = (function() {
         return new Promise((resolve, reject) => {
             // Check the playout status
             const result = checkPlayOutProgress(1);
-            if(result !== true) return reject('Graphic needs to be ' + result);
+            if(result !== true) return reject('Template needs to be ' + result);
             runFn(ccg, 'animateIn').then(res => {
                 if(res !== undefined && res !== true) throw res;
                 graphic.playoutInfo.progress = 2;
@@ -258,7 +256,7 @@ const ccg = (function() {
                 }
                 return resolve();
             }).catch(e => {
-                return reject('Error playing graphic: ' + e);
+                return reject('Error playing template: ' + e);
             });
         });   
     }
@@ -269,7 +267,7 @@ const ccg = (function() {
         return new Promise((resolve, reject) => {
             // Check the playout status
             const result = checkPlayOutProgress(2);
-            if(result !== true) return reject('Graphic needs to be ' + result);
+            if(result !== true) return reject('Template needs to be ' + result);
             runFn(ccg, 'shouldAdvance', {data: graphic.data, playoutInfo: graphic.playoutInfo}).then(res => {
                 if(res !== undefined && res !== true) throw new Error(res);
             }).then(() => runFn(ccg, 'advanceOut')).then(res => {
@@ -304,7 +302,7 @@ const ccg = (function() {
         return new Promise((resolve, reject) => {
             // Check the playout status
             const result = checkPlayOutProgress(2);
-            if(result !== true) return reject('Graphic needs to be ' + result);
+            if(result !== true) return reject('Template needs to be ' + result);
             runFn(ccg, 'animateOut').then(res => {
                 if(res !== undefined && res !== true) throw new Error(res);
                 graphic.playoutInfo.progress = 1;
@@ -515,6 +513,13 @@ const ccg = (function() {
                 SERVER.ws.onerror = function() {
                     reject('Error in Web Socket connection to ' + SERVER.WS_URL);
                 }
+                SERVER.ws.onclose = function(event) {
+                    if(event.wasClean) {
+                        console.log('Web Socket Closed', SERVER.WS_URL);
+                    } else {
+                        console.error('Web Socket Closed', SERVER.WS_URL)
+                    }
+                }
             } catch (error) {
                 return reject('Error in Web Socket connection to ' + SERVER.WS_URL);
             }
@@ -528,12 +533,12 @@ const ccg = (function() {
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
             if(res.status < 200 || res.status >= 300) 
-                return res.json().then(result => reject(result));
-            res.json().then(result => resolve(result));
+                return res.json().then(result => reject ? reject(result) : null);
+            res.json().then(result => resolve ? resolve(result) : result);
         } else {
             if(res.status < 200 || res.status >= 300) 
-                return reject('Error with request.' + res.url);
-            return resolve(res);
+                return reject ? reject('Error with request.' + res.url) : null;
+            return resolve ? resolve(res) : res;
         }
     }
 
@@ -561,7 +566,7 @@ const ccg = (function() {
                 }
                 headers.body = JSON.stringify(body);
             }
-            return fetch(serverUrl + url, headers)
+            return fetch(SERVER.URL + url, headers)
             .then(res => checkRequestResult(res, resolve, reject))
             .catch(error => checkRequestResult(error, resolve, reject));
         });
@@ -569,23 +574,32 @@ const ccg = (function() {
 
     // Logs a message to the server (client)
     // @param {string} message - The message to be logged
-    // @param {string} command [n] - The command to use when loggong the message
     // @param {string} channel - The url or websocket channel to send the message to
     // @param {boolean} error - If the message is an error message
     // @returns {promise} - A Promise that resolves when the message is successfully sent.
-    function logMessage({message, command, error}) {
+    function logMessage({message, error}) {
         if(SERVER.isAuthenitcated) {
             return new Promise((resolve, reject) => {
-                const channel = error ? server.channels.error : server.channels.log;
+                const channel = !error ? SERVER.channels.log : SERVER.channels.error;
                 if(SERVER.ws) {
+                    if(SERVER.ws.readyState !== 1) 
+                        return reject(`Web Socket is in an invalid state to send messages`, SERVER.ws.readyState);
                     try {
-                        SERVER.ws.send({channel, message, level, command, error});
+                        SERVER.ws.send(JSON.stringify({
+                            channel,
+                            message, 
+                            error,
+                            playoutInfo: {
+                                channel: graphic.playoutInfo.channel,
+                                layer: graphic.playoutInfo.layer
+                            }
+                        }));
                     } catch (error) {
                         return reject('An error occured when sending the WebSocket message: ' + error.message);
                     }
                     return resolve();
                 } else {
-                    Fetch(SERVER.URL + channel, 'POST', {message, level, command, error})
+                    Fetch(SERVER.URL + channel, 'POST', {message, error})
                     .then(() => {
                         if(graphic.ENV === 'DEV') 
                             console.log(`Message successfully sent: ${message}`);
@@ -815,7 +829,10 @@ const ccg = (function() {
         clearTemplate,
 
         // Helper Functions
-        logMessage,
+        logMessage: function(message) {
+            if(typeof message === 'object') return logMessage(message);
+            return logMessage({message, command: null, error: null});
+        },
         loadServerAsset,
 
         // Development Functions
