@@ -583,7 +583,7 @@ The position input can work with or without commas, a space is required at minim
     // Decodes the template data from the DOM and saves it browser's indexed DB
     function saveTemplateData(json) {
         try {
-            if(!json) json = document.querySelector('.dev-widget-data-con form').style.display !== 'none' 
+            if(!json || json.isTrusted !== undefined) json = document.querySelector('.dev-widget-data-con form').style.display !== 'none' 
                 ? decodeElementstoData()
                 : JSON.parse(document.querySelector('.dev-widget-data-con textarea').value);
             if(!json || !Object.keys(json)) return console.error('There was an error encoding the template data');
