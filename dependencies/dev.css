@@ -112,6 +112,10 @@
   color: black;
   border: none;
 }
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header button:first-of-type {
+  border-right: 1px solid white;
+  padding-right: 0.25em;
+}
 .dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-template-data-name {
   border: none;
   border-bottom: 1.5px solid white;

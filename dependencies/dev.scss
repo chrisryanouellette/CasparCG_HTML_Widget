@@ -133,6 +133,11 @@ $update: #1177B7;
                 color: black;
                 border: none;
             }
+
+            button:first-of-type {
+                border-right: 1px solid white;
+                padding-right: .25em;
+            }
         }
 
         .dev-widget-data-con {
