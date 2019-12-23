@@ -1,22 +1,105 @@
 <!-- CasparCG HTML Tempalte Developer Widget -->
-<div class="dev-controller open">
-    <!-- Visibility Controls -->
-    <button class="hide" name="hide" onclick="hideControls()"></button>
-    <button class="shrink" name="shrink" onclick="shrinkControls()"></button>
-    <button class="invis" name="invis" onclick="removeBackground(event)"></button>
-    <!-- Template Options -->
-    <div class="options span-columns">
-        <input type="text" class="position" onblur="moveWidget(event)" placeholder="Top, Bottom, Right, Left"/>
-        <input id="dev-bkg-color" type="text" placeholder="Set Background Color" onblur="setBackgroundColor(event)"/>
-        <div class="custom-command">
-            <input id="dev-custom-commands" type="text" onblur="setCustomCommand(event)" placeholder="Custom Command"/>
-            <button type="button" onclick="runCustomCommand()">Run</button>
+<!-- Most text values for buttons are set with ::after-->
+<div class="dev-widget dev-widget-display-open dev-widget-display-visible">
+    <div class="dev-widget-widget">
+        <!-- Visibility Controls -->
+        <div class="dev-widget-visibility">
+            <button class="dev-widget-hide" name="hide"></button>
+            <button class="dev-widget-shrink" name="shrink"></button>
+            <button class="dev-widget-invis" name="visible"></button>
+        </div>
+        <!-- Template Options -->
+        <div class="dev-widget-options">
+            <div class="dev-widget-position-con">
+                <button type="button">Drag Me</button>
+                <input type="text" class="dev-widget-position" placeholder="Top, Bottom, Right, Left"/>
+            </div>
+            <input class="dev-widget-background-color" type="text" placeholder="Set Bkg Color as HEX, RGB, or URL"/>
+            <div class="dev-widget-custom-command-con">
+                <input class="dev-widget-custom-command" type="text" placeholder="Custom Command"/>
+                <button class="dev-widget-custom-command-button" type="button" name="customCommand">Run</button>
+            </div>
+        </div>
+        <!-- Playout Controls -->
+        <div class="dev-widget-controls dev-widget-standard">
+            <button class="dev-widget-play dev-widget-control" name="play"></button>
+            <button class="dev-widget-next dev-widget-control" name="next"></button>
+            <button class="dev-widget-stop dev-widget-control" name="stop"></button>
+        </div>
+        <div class="dev-widget-controls dev-widget-data">
+            <button class="dev-widget-update" name="update"></button>
+            <button class="dev-widget-update-data"></button>
+        </div>
+        <div class="dev-widget-info">
+            <a target="_blank" href="https://github.com/zgav481/CasparCG_HTML_Widget/tree/chris">GitHub</a>
+            <button class="dev-widget-help">Help</button>
+            <button class="dev-widget-settings">Settings</button>
         </div>
     </div>
-    <!-- Playout Controls -->
-    <div class="controls span-columns">
-            <button class="play control" onclick="play()" ></button>
-            <button class="next control" onclick="next()" ></button>
-            <button class="stop control" onclick="stop()" ></button>
+    <!-- Update Container -->
+    <div class="dev-widget-update-data-con">
+        <div class="dev-widget-data-header">
+            <h2>Update Template Data</h2>
+            <div>
+                <select class="dev-widget-other-data"></select>
+                <button type="button">Import</button>
+                <button type="button">Associate</button>
+            </div>
         </div>
+        <div class="dev-widget-data-con">
+            <!-- Elements to duplicate and use within the data container -->
+            <div class="dev-widget-hidden-elements">
+                <input class="dev-widget-template-data" type="text"/>
+                <select class="dev-widget-data-type" value="text">
+                    <option value="object">Object</option>
+                    <option value="array">Array</option>
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="boolean">Boolean</option>
+                    <option value="remove">Remove</option>
+                </select>
+            </div>
+            <input class="dev-widget-template-data-name" type="text" placeholder="Enter Template Name"/>
+            <form></form>
+            <textarea></textarea>
+            <div class="dev-widget-add-value">
+                <button class="dev-widget-convert" type="button">Convert to raw JSON</button>
+                <button class="dev-widget-new-item" type="button">
+                    <svg viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" height="1.25em">
+                        <circle cx="50%" cy="50%" r="45%" fill="none", stroke="white" stroke-width="6px"/>
+                        <line x1="50%" y1="25%" x2="50%" y2="75%" stroke="white" stroke-width="4px" stroke-linecap="round"/>
+                        <line x1="25%" y1="50%" x2="75%" y2="50%" stroke="white" stroke-width="4px" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="dev-widget-update-controls">
+            <button type="button">Do Not Save</button>
+            <button type="button">Update and Save</button>
+        </div>
+    </div>
+    <!-- Widget Settings Container -->
+    <div class="dev-widget-settings-con">
+        <div>
+            <h2>User Settings</h2>
+        </div>
+        <div>
+            <form>
+                <label for="dev-widget-run-update-onload">Run update command on page load?</label>
+                <input id="dev-widget-run-update-onload" type="checkbox" name="callUpdateOnLoad"/>
+                <hr>
+                <label for="dev-widget-template-data-display">Display Template Data in GUI view</label>
+                <input id="dev-widget-template-data-display" type="checkbox" name="displayTemplateAsGui"/>
+                <label for="dev-widget-display-message">Display updates below widget?</label>
+                <input id="dev-widget-display-message" type="checkbox" name="displayUpdates"/>
+            </form>
+        </div>
+        <div class="dev-widget-update-prefs-controls">
+            <button type="button">Do Not Save</button>
+            <button type="button">Update and Save</button>
+        </div>
+    </div>
+    <div class="dev-widget-display-message">
+        <p></p>
+    </div>
 </div>
