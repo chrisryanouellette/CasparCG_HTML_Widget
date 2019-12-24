@@ -132,7 +132,8 @@ const DEVWIDGET = (function() {
                 attr: 'click',
                 value: toggleEditTempateData
             });
-            modifyAttrValues('.dev-widget-data-header button', {type: 'event', attr: 'click', value: importTemplateData});
+            modifyAttrValues('.dev-widget-data-header button:first-of-type', {type: 'event', attr: 'click', value: importTemplateData});
+            modifyAttrValues('.dev-widget-data-header button:last-of-type', {type: 'event', attr: 'click', value: associateTemplateData});
             modifyAttrValues('.dev-widget-add-value .dev-widget-new-item', {type: 'event', attr: 'click', value: modifyTemplateDataField});
             modifyAttrValues('.dev-widget-update-controls button:last-of-type', {type: 'event', attr: 'click', value: saveTemplateData});
             modifyAttrValues('.dev-widget-add-value .dev-widget-convert', {type: 'event', attr: 'click', value: convertTemplateData});
@@ -173,32 +174,55 @@ const DEVWIDGET = (function() {
         // If the template is in Caspar, use local storage
         if(DB.CASPAR) {
             try {
-                templateData = getLocalStorage(location);
+                const data = getLocalStorage(location);
+                if(data.association) {
+                    templateData = getLocalStorage(data.association);
+                    templateData.association = data.association;
+                    document.querySelector('.')
+                } else {
+                    templateData = data;
+                }
             } catch (error) {
                 if(error.message) console.error('Error with template data: ' + error.message);
             }
         // Else, use IndexedDB
         } else {
-            await getTemplateData(null).then(results => {
-                if(!results) return;
-                const select = document.querySelector('.dev-widget-other-data');
-                // Find the inde of the data for this template
-                const index = results.findIndex(i => i.location === location);
-                if(index !== -1) {
-                    templateData = results.splice(index, 1)[0];
-                } else {
-                    console.warn(`${location} does not have any template data`);
-                }
-                // Add any additonal data options to the import select element
-                results.length && results.forEach(i => {
-                    const option = document.createElement('option');
-                    option.value = i.location;
-                    option.textContent = i.name;
-                    select.append(option);
-                });
-            })
-            .catch(error => {
+            // Get all the graphics saved
+            const results = await getTemplateData(null).catch(error => {
                 return console.error(error);
+            });
+            if(!results) return;
+            const select = document.querySelector('.dev-widget-other-data');
+            // Find the index of the data for this template
+            const index = results.findIndex(i => i.location === location);
+            if(index !== -1) {
+                let data = results.splice(index, 1)[0];
+                // If the graphic is associated to another graphic, get it's data
+                if(data.association) {
+                    const result = await getTemplateData(data.association).catch(error => {
+                        return console.error(error);
+                    });
+                    if(!result) return console.error(`Error finding associated graphic ${data.association}`);;
+                    templateData = result;
+                    templateData.association = data.association;
+                    templateData.id = data.id;
+                    templateData.name = 'ASSOCIATED';
+                    document.querySelector('.dev-widget-update-controls button:last-of-type').textContent = 'Associated';
+                // Set the template data to the graphics's saved data
+                } else {
+                    templateData = data;
+                    if(!templateData.data) templateData.data = {};
+                }
+            } else {
+                console.warn(`${location} does not have any template data`);
+            }
+            // Add any additonal data options to the import select element
+            results.length && results.forEach(i => {
+                if(i.association) return;
+                const option = document.createElement('option');
+                option.value = i.location;
+                option.textContent = i.name;
+                select.append(option);
             });
         }
     }
@@ -518,6 +542,7 @@ The position input can work with or without commas, a space is required at minim
         } else {
             document.querySelector('.dev-widget-custom-command').value = e;
         }
+        devData.customCommand = e;
         return setLocalStorage('devWidget', {customCommand: e});
     }
 
@@ -554,8 +579,8 @@ The position input can work with or without commas, a space is required at minim
                     modifyAttrValues('.dev-widget-data-header div', {
                         type: 'style', attr: 'display', value: 'none'
                     });
-                // If there is no tempalte data, create a baseline to start from
-                if(!Object.keys(templateData).length) {
+                // If there is no template data, create a baseline to start from
+                if(!templateData.data || !Object.keys(templateData.data).length) {
                     form.append(createNewDataObject('text'));
                     form.querySelector('select').value = 'text';
                 // Encode the data to the DOM
@@ -583,23 +608,36 @@ The position input can work with or without commas, a space is required at minim
     // Decodes the template data from the DOM and saves it browser's indexed DB
     function saveTemplateData(json) {
         try {
-            if(!json) json = document.querySelector('.dev-widget-data-con form').style.display !== 'none' 
+            if(!json || json.isTrusted !== undefined) json = document.querySelector('.dev-widget-data-con form').style.display !== 'none' 
                 ? decodeElementstoData()
                 : JSON.parse(document.querySelector('.dev-widget-data-con textarea').value);
-            if(!json || !Object.keys(json)) return console.error('There was an error encoding the template data');
-            const name = document.querySelector('.dev-widget-template-data-name').value;
+            if(!json || !Object.keys(json)) 
+                return console.error('There was an error encoding the template data');
+            templateData.name = document.querySelector('.dev-widget-template-data-name').value;
             // Assemble the update object
-            const update = {name, location: window.location.pathname.substring(1).replace(/\//g, '-'), data: json};
+            const update = {
+                name: templateData.name, 
+                location: window.location.pathname.substring(1).replace(/\//g, '-'), 
+            };
             // If the data needs to be updated, add the id
             if(templateData.id) update.id = templateData.id;
+            // If the template is not associated to another, set the data
+            if(!templateData.association) {
+                update.data = json;
+                update.association = null;
+            // Else, set the assoication
+            } else {
+                update.data = null;
+                update.association = templateData.association;
+            }
             if(DB.CASPAR) {
                 setLocalStorage(update.location, update);
             } else {
                 modifyTemplateData(update)
-                    // Hide the .dev-widget-data-con
-                    .then(toggleEditTempateData)
-                    .catch(error => 
-                        console.error("Something went wrong with saving the tempalte's data", error));
+                // Hide the .dev-widget-data-con
+                .then(toggleEditTempateData)
+                .catch(error => 
+                    console.error("Something went wrong with saving the template's data", error));
             }
            
         } catch (error) {
@@ -608,21 +646,44 @@ The position input can work with or without commas, a space is required at minim
     }
 
     // Imports template data from another template
-    function importTemplateData() {
+    async function importTemplateData() {
+        // Get the selected template to import
         const select = document.querySelector('.dev-widget-other-data');
         if(!select.childNodes) return console.error('There is no other data to import');
         const location = select.value;
-        // Searches for a template data record
-        getTemplateData(location)
-            .then(result => {
-                if(!result) throw new Error('Invalid location query');
-                const form = document.querySelector('.dev-widget-data-con form');
-                form.innerHTML = '';
-                encodeDataToElements(result.data, form);
-            })
-            .catch(error => {
+        const currentId = templateData.id;
+        const form = document.querySelector('.dev-widget-data-con form');
+        // Attenpt to get the data
+        try {
+            // Searches for a template data record
+            const result = await getTemplateData(location).catch(error => {
                 return console.error(`${select.childNodes[select.selectedIndex].textContent} (${location}) could not be imported`, error);
             });
+            if(!result) throw new Error('Invalid location query');
+            form.innerHTML = '';
+            templateData = result;
+            templateData.id = currentId;
+            templateData.name = result.name + ' IMPORTED';
+            encodeDataToElements(templateData.data, form);
+            document.querySelector('.dev-widget-update-controls button:last-of-type').textContent = 'Update and Save';
+            return location;
+        } catch(error) {
+            console.error(error.message);
+            return null;
+        }
+    }
+
+    // Imports and assocaites data to a template
+    async function associateTemplateData() {
+        // Import the data and get the location of the import
+        const location = await importTemplateData();
+        if(!location) return;
+        templateData.association = location;
+        // Save the assocation
+        saveTemplateData({association: location});
+        document.querySelector('.dev-widget-update-controls button:last-of-type').textContent = 'Associated';
+        displayMessage('Data has been associated with ' + location);
+        return console.log('Data has been associated with ' + location);
     }
 
     // Converts the GUI data display to a text display and vise versa
@@ -690,7 +751,7 @@ The position input can work with or without commas, a space is required at minim
                     div.querySelector('.dev-widget-data-key').value = item;
             checkforArray(parent, div);
             parent.append(div);
-        })
+        });
     }
 
     // Takes an DOM NOde and decodes it to a JSOn object
@@ -745,7 +806,7 @@ The position input can work with or without commas, a space is required at minim
         return compressData(data, {});
     }
 
-    // Creates a new empty DIV element containing the minimum requirements to be tempalte data
+    // Creates a new empty DIV element containing the minimum requirements to be template data
     // @param {string} type - The type of JSON element to encode to
     // @returns {DOM Node} - The DIV element that contains the nessecary elements to make up a template data section
     function createNewDataObject(type) {
@@ -1234,7 +1295,7 @@ The position input can work with or without commas, a space is required at minim
         return req;
     }
 
-    // Gets the data for a tempalte from the broswer's Indexed DB using a location string
+    // Gets the data for a template from the broswer's Indexed DB using a location string
     // @param {string} location - The location id to be used when looking for the template data
     // @returns {Promise} - Resolves when the data is recieved
     function getTemplateData(location) {
@@ -1255,7 +1316,7 @@ The position input can work with or without commas, a space is required at minim
         });
     }
 
-    // Updates the tempalte dat in the browser's indexed DB
+    // Updates the template dat in the browser's indexed DB
     // @param {object} data - The data to be updated or saved
     function modifyTemplateData(data) {
         return new Promise((resolve, reject) => {
@@ -1265,12 +1326,13 @@ The position input can work with or without commas, a space is required at minim
                 req.onsuccess = function(event) {
                     event.target.result.data = data.data;
                     event.target.result.name = data.name;
+                    event.target.result.association = data.association;
                     const reqUpd = store.put(event.target.result);
                     reqUpd.onerror = function(error) {
                         return reject("modfiyTemplateData: " + event.target.errorCode);
                     }
                     reqUpd.onsuccess = function(e) {
-                        templateData = data;
+                        //if(!data.association) templateData = data;
                         return resolve();
                     }
                 };
@@ -1282,10 +1344,7 @@ The position input can work with or without commas, a space is required at minim
                 req.onerror = function(error) {
                     return reject("modfiyTemplateData: " + event.target.errorCode);
                 }
-                req.onsuccess = function(e) {
-                    templateData = data;
-                    return resolve();
-                }
+                req.onsuccess = resolve;
             }
         });
     }
@@ -1329,7 +1388,7 @@ The position input can work with or without commas, a space is required at minim
 
     function getRAWHTML() {
         return `
-<!-- CasparCG HTML Tempalte Developer Widget -->
+<!-- CasparCG HTML Template Developer Widget -->
 <!-- Most text values for buttons are set with ::after-->
 <div class="dev-widget dev-widget-display-open dev-widget-display-visible">
     <div class="dev-widget-widget">
@@ -1374,6 +1433,7 @@ The position input can work with or without commas, a space is required at minim
             <div>
                 <select class="dev-widget-other-data"></select>
                 <button type="button">Import</button>
+                <button type="button">Associate</button>
             </div>
         </div>
         <div class="dev-widget-data-con">
@@ -1556,6 +1616,10 @@ The position input can work with or without commas, a space is required at minim
 .dev-widget .dev-widget-update-data-con .dev-widget-data-header option {
   color: black;
   border: none;
+}
+.dev-widget .dev-widget-update-data-con .dev-widget-data-header button:first-of-type {
+  border-right: 1px solid white;
+  padding-right: 0.25em;
 }
 .dev-widget .dev-widget-update-data-con .dev-widget-data-con .dev-widget-template-data-name {
   border: none;
@@ -1819,7 +1883,6 @@ The position input can work with or without commas, a space is required at minim
 .dev-widget-display-full-screen .dev-widget-widget {
   filter: blur(2px);
 }
-</style>
 `
     }
 
@@ -1864,7 +1927,19 @@ Example (Copy): DEVWIDGET.setBackgroundColor('#123')`
             );
             return updateBackgroundColor(color);
         },
-
+        setWidgetDisplay: function(display) {
+            if(!display) return console.log(
+`DEVWIDGET.setWidgetDisplay(display)
+Sets the display of the widget (Hide, Shrink, and Invis)
+    @param {string} display - The display (look) to change the widget to
+Example (Copy): DEVWIDGET.setDisplay('shrink visible')`
+            );
+            return updateDisplay(display);
+        },
+        // Returns the display classes for the widget
+        getWidgetDisplay: function() {
+            return devData.display;
+        },
         // Returns the custom command
         getCustomCommand: function() {return devData.customCommand},
         // Sets the custom command
@@ -1884,7 +1959,7 @@ Example (Copy): DEVWIDGET.setCustomCommand('reset')`
 
         // Displays or closes the update template data window
         toggleEditTempateData,
-        // Gets the tempalte data and retuns it as a string
+        // Gets the template data and retuns it as a string
         getWidgetTemplateData: () => {return JSON.stringify(templateData.data)},
         // Sets the template's data
         setWidgetTemplateData: (data) => {
@@ -1987,6 +2062,8 @@ Run the set functions without parameters to get the help. Example (Copy): DEVWID
 
 DEVWIDGET.getBackgroundColor()
 DEVWIDGET.setBackgroundColor()
+DEVWIDGET.setWidgetDisplay()
+DEVWIDGET.getWidgetDisplay()
 DEVWIDGET.getCustomCommand()
 DEVWIDGET.setCustomCommand()
 DEVWIDGET.runCustomCommand()
