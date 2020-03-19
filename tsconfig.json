@@ -1,0 +1,17 @@
+/*
+    Configuration for TypeScript Compiler
+    Target: es6
+*/
+
+{
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "commonjs",
+        "target": "es6"
+    },
+    "include": ["./**/*.ts"],
+    "exclude": ["./**/*.test.ts"]   
+}

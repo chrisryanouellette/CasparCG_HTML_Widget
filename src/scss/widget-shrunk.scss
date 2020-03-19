@@ -1,0 +1,36 @@
+.DEV-WIDGET-SHRUNKEN {
+    
+    .DEV-WIDGET-SECTION {
+        flex-direction: column;
+
+        button {margin: .5vh 0}
+    }
+
+    div.DEV-WIDGET-STYLE-CONTROLS, div.DEV-WIDGET-SETTINGS, div.DEV-WIDGET-LOGGER {
+        display: none;
+    }
+
+    button.DEV-WIDGET-HIDE::after {
+        content: 'H';
+    }
+
+    button.DEV-WIDGET-SHRINK::after {
+        content: 'S';
+    }
+
+    button.DEV-WIDGET-INVIS::after {
+        content: 'I';
+    }
+    button.DEV-WIDGET-PLAY::after {
+        content: 'P';
+    }
+    button.DEV-WIDGET-NEXT::after {
+        content: 'N';
+    }
+    button.DEV-WIDGET-STOP::after {
+        content: 'S';
+    }
+    button.DEV-WIDGET-UPDATE::after {
+        content: 'U';
+    }
+}

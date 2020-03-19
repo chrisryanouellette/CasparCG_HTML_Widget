@@ -1,42 +1,26 @@
 # CasparCG HTML Template Developer Widget
 
-The widget is made up of just one JS file! There are formatted versions of each component in the dependencies folder.</br>
+The CasparCG Widget is a drop in script that creates a small on screen widget which will interact with your HTML Templates. It is written in TypeScript and the converted JS file is called `dev.js` and can be found in the `dist` folder.
 
 Join the discussion on the [CasparCG Forum](https://casparcgforum.org/).
 
 ## Features
-Change the background color quickly using a HEX, RGB or, RGBA values without editing the CSS file.</br>
+
+Change the background color quickly using a color keyword, HEX, RGB or, RGBA values without editing the CSS file.</br>
 Set the background to an image using a URL.</br>
 Run custom commands (Invoke Command) from the widget.</br>
 Easily run the standard Update, Play, Next, and Stop Commands.</br>
-Set custom data with a convenient GUI that is injected into the graphic template.</br>
-All data is persistent between page reloads!
+Set custom data with a convenient GUI that is injected into the graphic template's update function.</br>
+Save multiple data sets for templates that require more than the initial update data. </br>
+All data is persistent between page reloads! </br>
+
 
 ## Live Demo
+
 Try the live demo [here](http://www.casparcgwidget.com)!
 
 ## Setup
-1. Add this bit of code to a JS file that will be loaded with the template. Don't forget to  change the `DEV_SCRIPT_URL`. 
 
-```js
-// Create an enviorment vairiable to control if the widget is loaded
-const ENV = 'DEV';
-// Change DEV_SCRIPT_URL to the url the dev.js script will be served from 
-const DEV_SCRIPT_URL = '';
-
-window.onload = () => {
-    if(ENV && ENV === 'DEV') {
-        const script = document.createElement('script');
-        script.type = "application/javascript";
-        script.src = DEV_SCRIPT_URL;
-        document.querySelector('body').append(script);
-    }
-};
-```
-
-2. And your done! The template data is stored in the browser's IndexedDB and it persistent between page reloads. The widget's data is stored in the browser's local storage.
-
-### Alternative Setup
 You can load the `dev.js` file directly in your HTML by adding the following line.
 
 ```html
@@ -45,14 +29,22 @@ You can load the `dev.js` file directly in your HTML by adding the following lin
 
 Then visit the template's URL with `?debug=true` as the query string. </br>
 
-Example: `http://localhost/html/template.html?debug=true` </br>
+Example: `http://localhost:3000/html/template.html?debug=true` </br>
 
-Check the developers console for additional info.
+
+## Development Setup
+
+To develop the widget itself, you will need NPM installed and then to follow these two additional steps.
+
+1. Run `npm install` in a command prompt in the root folder of this repo.
+2. Run `npm run-script start` to launch the WebPack Dev Server. 
+
+The development server should now be live at `http://localhost:3000`.
 
 ### Widget API
 
-The widget offers a full API for interacting with the template. </br>
-For the full list, type `DEVWIDGET.help` into the console or press the help button on the widget.
+The widget offers a full API for interacting with the widget itself. </br>
+For the full list, type `_widget.help` into the console.
 
 ### Some Images of the Widget for Reference
 

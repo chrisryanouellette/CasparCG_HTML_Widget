@@ -1,0 +1,12 @@
+.DEV-WIDGET-HELP {
+    .DEV-WIDGET-POPUP-BACKGROUND {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+        grid-row-gap: .5em;
+        max-width: 40vw;
+        padding: .5em
+    }
+    label {white-space: nowrap; margin-right: 1em;}
+    label:not(:last-of-type) {margin-bottom: 2.5em;}
+    p {grid-column: 2;}
+}

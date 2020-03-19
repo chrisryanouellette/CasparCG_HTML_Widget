@@ -1,0 +1,13 @@
+.DEV-WIDGET-HIDDEN {
+    div.DEV-WIDGET-CONTROLS .DEV-WIDGET-STYLE-CONTROLS, 
+    div.DEV-WIDGET-DISPLAY-CONTROLS button:not(.DEV-WIDGET-HIDE),
+    div.DEV-WIDGET-PLAYOUT-CONTROLS, 
+    div.DEV-WIDGET-LOGGER,
+    div.DEV-WIDGET-SETTINGS {
+        display: none;
+    }
+
+    button.DEV-WIDGET-HIDE::after {
+        content: 'H';
+    }
+}

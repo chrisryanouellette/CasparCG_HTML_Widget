@@ -1,0 +1,41 @@
+.DEV-WIDGET-OPEN {
+    height: 17vw;
+    width: 17vw;
+
+    .DEV-WIDGET-PLAYOUT-CONTROLS {
+        flex-wrap: wrap;
+        button {
+            flex-basis: 30%;
+            font-size: 1.25em;
+            margin: .5vh 0;
+        }
+        button.DEV-WIDGET-UPDATE {
+            flex-basis: 100%;
+        }
+    }
+
+    button.DEV-WIDGET-HIDE::after {
+        content: 'Hide';
+    }
+
+    button.DEV-WIDGET-SHRINK::after {
+        content: 'Shrink';
+    }
+
+    button.DEV-WIDGET-INVIS::after {
+        content: 'Invis';
+    }
+
+    button.DEV-WIDGET-PLAY::after {
+        content: 'Play';
+    }
+    button.DEV-WIDGET-NEXT::after {
+        content: 'Next';
+    }
+    button.DEV-WIDGET-STOP::after {
+        content: 'Stop';
+    }
+    button.DEV-WIDGET-UPDATE::after {
+        content: 'Update';
+    }
+}
