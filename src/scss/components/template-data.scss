@@ -1,0 +1,92 @@
+.DEV-WIDGET-TEMPLATE-DATA {
+    > div {min-width: 55vw;}
+    h2 {
+        align-items: center;
+        display: flex;
+        white-space: nowrap;
+        svg {
+            padding-left: 1vw;
+            width: 1.5vw;
+            &:first-of-type {margin-left: auto}
+        }
+
+    }
+    .DEV-WIDGET-POPUP-BACKGROUND {
+        display: grid;
+        grid-template-columns: min-content 1fr;
+        > div {
+            display: flex;
+            flex-direction: column;
+            height: 50vh; 
+            overflow: hidden;
+            padding: 0 1.5vw;
+        }
+    }
+    .DEV-WIDGET-POPUP-BACKGROUND {grid-auto-flow: column;}
+    .DEV-WIDGET-POPUP-BACKGROUND > div:first-of-type {
+        border-right: 2px solid white;
+        div {
+            display: flex; 
+            flex-direction: column; 
+            min-height: 15vh;
+            max-height: 18vh;
+            overflow-y: auto;
+        }
+        label {border-bottom: 1.5px solid transparent; margin-bottom: .5vw;}
+        svg {stroke: white; stroke-width: .5vw; margin-right: .25vw; width: .7vw;}
+        .DEV-WIDGET-SELECTED {border-bottom: 1.5px solid white;}
+        h2:last-of-type {cursor: pointer}
+    }
+    .DEV-WIDGET-TEMPLATE-DATA-CON {
+        border: .15vw solid $update;
+        margin: 0 auto;
+        width: -webkit-fill-available;
+        .DEV-WIDGET-TEMPLATE-DATA-CON {width: 95%; margin: .5vh auto;}
+        .DEV-WIDGET-SELECT {flex-basis: 100%;}
+    }
+    .DEV-WIDGET-TEMPLATE-DATA-CON:first-of-type, textarea {
+        height: inherit;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    .DEV-WIDGET-POPUP-BACKGROUND {
+        height: 100%; 
+        min-width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    .DEV-WIDGET-TEMPLATE-DATA-CON-ASSOCIATED {
+        border: 0.15vw solid $stop;
+        .DEV-WIDGET-TEMPLATE-DATA-CON {border: 0.15vw solid $stop;}
+    }
+    .DEV-WIDGET-TEMPLATE-DATA-ITEM {
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: unset;
+        padding: .25em .5em;
+
+        > *:not(button) {margin: 0 .5em;}
+        input {width: 100%;}
+        button {
+            display: flex;
+            
+        }
+        button[style] {margin-left: auto;}
+        .DEV-WIDGET-CHECKBOX {flex: 1; min-width: 3vw}
+        svg {width: 1.5vw;}
+    }
+    .DEV-WIDGET-TEMPLATE-NAME {
+        align-items: center;
+        display: inherit; 
+        justify-content: space-between;
+        height: 5vh;
+        input {width: 100%;}
+        button {
+            margin-left: 1vw; 
+            padding: 0;
+            &:focus {outline: none;}
+        }
+        button, svg {height: 2vw;}
+    }
+}

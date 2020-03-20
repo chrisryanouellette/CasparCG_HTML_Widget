@@ -1,0 +1,40 @@
+.DEV-WIDGET-SELECT {
+    .DEV-WIDGET-SELECTED {
+        align-items: center;
+        border: .1vw solid white;
+        border-radius: .3vw;
+        display: flex;
+        text-align: center;
+    }
+    label {user-select: none; margin: 0 auto;}
+    ul {
+        background-color: $grey;
+        border: .1vw solid black;
+        display: none;
+        position: absolute;
+        margin: -.15rem 0 0 0;
+        padding: .25em .5em;
+        width: max-content;
+        z-index: -1;
+        li {
+            color: white;
+            list-style: none;
+            padding: 10px 5px;
+            user-select: none;
+        }
+    }
+    svg {
+        height: 1.5vw;
+        width: 1.5vw;
+        path:first-of-type {fill: white;}
+        path {fill: $grey;}
+    }
+}
+
+.DEV-WIDGET-SELECT-OPEN {
+    ul {
+        display: block;
+        z-index: 10;
+    }
+    svg {transform: rotate(180deg);}
+}

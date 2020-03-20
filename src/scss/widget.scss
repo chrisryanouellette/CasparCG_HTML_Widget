@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400&display=swap');
+@import './_variables.scss';
+
+@import './widget-open.scss';
+@import './widget-shrunk.scss';
+@import './widget-hidden.scss';
+
+@import './ui/icons.scss';
+
+.DEV-WIDGET {
+    @import './ui/select.scss';
+    @import './ui/checkbox.scss';
+
+    background-color: $grey;
+    border: .2vw solid transparent;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    padding: .5vw;
+    position: absolute;
+    z-index: 5;
+
+    * {
+        font-weight: 400;
+        font-size: 1vw;
+        font-family: $font-stack;
+    }
+
+    button {
+        background-color: transparent;
+        border: none;
+        border-radius: 5px;
+        color: white;
+
+        &.DEV-WIDGET-DANGER-BUTTON {background-color: $stop;}
+        &.DEV-WIDGET-BUTTON-INACTIVE {color: $light-grey;}
+    }
+
+    input {
+        background-color: white;
+        border: .1vw solid transparent;
+        border-radius: 5px;
+        margin: .25em 0;
+        padding: .15em;
+    }
+
+    svg {
+        width: 50%;
+    }
+}
+
+.DEV-WIDGET {
+    @import './widget-popup.scss';
+
+    .DEV-WIDGET-SECTION {
+        display: inherit;
+        justify-content: space-between;
+    }
+    .DEV-WIDGET-CONTROLS {flex-direction: column;}
+    .DEV-WIDGET-STYLE-CONTROLS {
+        flex-wrap: wrap;
+        button {
+            margin: 0 auto;
+            text-align: center;
+        }
+        input {
+            flex-basis: 100%;
+            width: 100%;
+        }
+
+        input:first-of-type, input:last-of-type {flex-basis: 58%;}
+    }
+
+    .DEV-WIDGET-PLAY {background-color: $play;}
+    .DEV-WIDGET-NEXT {background-color: $next;}
+    .DEV-WIDGET-STOP {background-color: $stop;}
+    .DEV-WIDGET-UPDATE {background-color: $update;}
+    .DEV-WIDGET-DATA {
+        background-color: white;
+        color: black;
+    }
+
+    .DEV-WIDGET-SETTINGS {
+        flex-wrap: wrap;
+        margin-top: auto;
+        .DEV-WIDGET-SELECT {
+            color: white;
+            flex-basis: 65%; 
+            //position: relative;
+            //ul {width: -webkit-fill-available;}
+        }
+        > button {
+            width: 5vw;
+            &:not(:first-of-type) {margin-top: .5vh;}
+        }
+        
+    }
+
+    .DEV-WIDGET-LOGGER {
+        bottom: 0;
+        left: 0;
+        position: absolute;
+        opacity: 0;
+        z-index: -10;
+        transition-property: bottom, opacity;
+        transition-duration: 1s, 1s;
+        text-align: center;
+        width: 100%;
+
+        p {
+            margin: 0;
+            word-break: break-all;
+        }
+    }
+
+    .DEV-WIDGET-SLIDE-DOWN {
+        bottom: -3em;
+        opacity: 1;
+    }
+
+    .DEV-WIDGET-LABEL, button {user-select: none;}
+    
+}
+
+.DEV-WIDGET:not(.DEV-WIDGET-OPEN) {
+    border-radius: 5px;
+    padding: .5vw;
+    height: min-content;
+    width: min-content;
+}
+
+.DEV-WIDGET-INVIS {
+    background-color: transparent;
+    border: .2vw solid $grey;
+
+    input {
+        border: .1vw solid black;
+    }
+
+    .DEV-WIDGET-PLAYOUT-CONTROLS button, .DEV-WIDGET-SETTINGS > button {
+        background-color: transparent;
+    }
+}
+
+.DEV-WIDGET-TITLE-SAFE {
+    border: 2px solid black;
+    position: absolute;
+    top: 5vh;
+    right: 5vw;
+    height: 90vh;
+    width: 90vw;
+}

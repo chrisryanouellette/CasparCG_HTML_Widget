@@ -1,0 +1,68 @@
+.DEV-WIDGET {
+    .DEV-WIDGET-GITHUB-ICON, .DEV-WIDGET-SETTINGS-ICON {
+        fill: white;
+    }
+
+    .DEV-WIDGET-HELP-ICON {
+        circle {
+            fill: none;
+            stroke: white;
+            stroke-width: .3vw;
+        }
+        path {
+            fill: white;
+        }
+    }
+    .DEV-WIDGET-CONVERT-TO-JSON,
+    .DEV-WIDGET-PLUS-ICON, 
+    .DEV-WIDGET-MINUS-ICON, 
+    .DEV-WIDGET-CLOSE-ICON, 
+    .DEV-WIDGET-TRASH-ICON {
+        stroke: white;
+        circle {fill: none; stroke-width: .3vw;}
+        line { stroke-width: .2vw; }
+    }
+    .DEV-WIDGET-TRASH-ICON {
+        path:first-of-type {
+            fill: white
+        }
+        g line {stroke: $grey; stroke-width: .20vw}
+    }
+    .DEV-WIDGET-CLOSE-ICON {transform: rotate(45deg);}
+    .DEV-WIDGET-SAVE-ICON {
+        > path:first-of-type {
+            fill: $grey;
+            stroke: white;
+            stroke-width: .4vw;
+            transition: stroke .5s;
+        }
+        > rect:first-of-type {
+            fill: white;
+            transition: fill .5s;
+        }
+        rect:nth-of-type(2) {fill: $grey}
+        > rect:last-of-type {
+            fill: white;
+            transition: fill .5s;
+        }
+        line {
+            stroke: $grey;
+            stroke-width: .2vw;
+        }
+        g path, g rect {fill: white; stroke: $grey; stroke-width: .05vw;} 
+    }
+    .DEV-WIDGET-SAVED {
+        > path:first-of-type {stroke: $play;}
+        > rect:first-of-type {fill: $play;}
+        > rect:last-of-type {fill: $play;}
+    }
+    .DEV-WIDGET-CONVERT-TO-JSON{
+        path {
+            fill: none; 
+            stroke: white;
+            stroke-width: .15vw;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    }
+}

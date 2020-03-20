@@ -1,2 +1,3 @@
 *.map
 demo
+node_modules/

@@ -1,0 +1,12 @@
+.DEV-WIDGET-USER-SETTINGS {
+    button:not(.DEV-WIDGET-CLOSE-BUTTON) {margin: 1vh 0;}
+    input {margin: 0 auto; text-align: center; width: 3vw;}
+    .DEV-WIDGET-POPUP-BACKGROUND {display: inherit;}
+    .DEV-WIDGET-POPUP-FORM {
+        border-bottom: 2px solid white;
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+        grid-row-gap: .25em;
+        padding-bottom: 1em;
+    }
+}

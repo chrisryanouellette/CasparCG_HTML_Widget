@@ -1,0 +1,54 @@
+@import './_variables.scss';
+
+@import './components/template-data.scss';
+@import './components/user-settings.scss';
+@import './components/help.scss';
+
+
+.DEV-WIDGET-POPUP {
+    display: none;
+    position: absolute;
+    height: 98vh;
+    width: 98vw;
+    top: 0; left: 0;
+    
+    > div {display: inherit; flex-direction: inherit;}
+    h2, p {
+        color: white;
+        margin: 0;
+    }
+    h2 {
+        font-size: 1.5em; 
+        grid-column: span 2; 
+        margin: .25em 0 .5em 0;
+
+        button {font-size: .75em; float: right;}
+    }
+    label {color: white}
+    svg {width: 2vw;}
+    button {font-size: 1.5em;}
+
+    .DEV-WIDGET-CLOSE-BUTTON {margin-left: auto; width: min-content;}
+
+    .DEV-WIDGET-POPUP-BACKGROUND {
+        background-color: $grey;
+        border-radius: 10px;
+        flex-direction: inherit;
+        min-width: 25vw;
+        padding: .5vh .5vw;
+
+        .DEV-WIDGET-TEMPLATE-DATA-CONTROLLER {
+            flex: 1;
+            display: inherit;
+            justify-content: space-around;
+            margin: 1vh 0;
+        }
+    }
+}
+
+.DEV-WIDGET-POPUP-OPEN {
+    align-items: center;
+    display: inherit;
+    flex-direction: column;
+    justify-content: center;
+}
